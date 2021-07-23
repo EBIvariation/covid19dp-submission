@@ -36,3 +36,6 @@ jobs:
     - name: Set up VCF validator and assembly checker
       run: |
         sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v${{ matrix.vcf-validator-version }}/vcf_validator_linux && chmod 755 vcf_validator_linux"
+    - name: Test with pytest
+      run: |
+        PYTHONPATH=. pytest tests
