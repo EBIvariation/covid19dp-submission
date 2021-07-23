@@ -5,9 +5,9 @@ name: Covid-19 DP submission CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -36,4 +36,3 @@ jobs:
     - name: Set up VCF validator and assembly checker
       run: |
         sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v${{ matrix.vcf-validator-version }}/vcf_validator_linux && chmod 755 vcf_validator_linux"
-
