@@ -14,7 +14,7 @@ setup(
     package_data={'covid19dp_submission': ['VERSION']},
     version=version,
     license='Apache',
-    description='EBI EVA - submission processing tools',
+    description='EBI EVA - Covid19 Data portal submission processing tools',
     url='https://github.com/EBIVariation/covid19dp-submission',
     keywords=['ebi', 'eva', 'python', 'covid19dp', 'submission'],
     install_requires=requirements,

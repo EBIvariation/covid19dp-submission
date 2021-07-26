@@ -55,7 +55,7 @@ def run_vcf_validation(vcf_file: str, validator_binary: str, output_dir: str) ->
         if number_of_unacceptable_errors > 0:
             logger.error(f"Unacceptable VCF validation errors found. "
                          f"See file {last_generated_validator_output_file} for details.")
-            raise SystemExit("Unacceptable VCF validation errors found!")
+            raise SystemExit("FAIL: Unacceptable VCF validation errors found.")
 
 
 def main():

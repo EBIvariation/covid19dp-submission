@@ -17,24 +17,31 @@ import os
 
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
+from retry import retry
 from subprocess import CalledProcessError
 
 logger = logging_config.get_logger(__name__)
 logging_config.add_stdout_handler()
 
 
-def download_snapshot(download_url, snapshot_name, project_dir):
+@retry(exceptions=CalledProcessError, logger=logger, tries=4, delay=240, backoff=1.2, jitter=(1, 3))
+def download_snapshot(download_url: str, snapshot_name: str or None, project_dir: str) -> str:
     snapshot_name = snapshot_name if snapshot_name else os.path.basename(download_url).replace(".tar.gz", "")
     assert snapshot_name, "Snapshot name cannot be empty!"
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
+    os.makedirs(download_target_dir, exist_ok=True)
+    if os.listdir(download_target_dir):
+        raise FileExistsError(f"FAIL: Snapshot already downloaded to target directory: {download_target_dir}. "
+                              f"Please delete that directory to re-download.")
     download_file_name = os.path.basename(download_url)
 
     # Use strip-components switch to avoid extracting with the directory structure
     # since we have already created the requisite directory and passed it to download_target_dir
-    snapshot_download_command = f'bash -c "cd {download_target_dir} && curl -O {download_file_name} && ' \
-                                f'tar xzvf {download_file_name} --strip-components=1"'
+    snapshot_download_command = f'bash -c "cd {download_target_dir} && curl -O {download_url} && ' \
+                                f'tar xzf {download_file_name} --strip-components=1 && rm -rf {download_file_name}"'
     run_command_with_output(f"Downloading data snapshot {snapshot_name}...", snapshot_download_command)
+    return download_target_dir
 
 
 def main():

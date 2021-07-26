@@ -16,8 +16,19 @@ jobs:
       matrix:
         python-version: [3.8]
         vcf-validator-version: [0.9.4]
-
+        mongo-version: [4.0.18]
+    services:
+      db:
+        image: postgres
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
     steps:
+    - name: Create mongoDB Docker container
+      run: sudo docker run -d -p 27017:27017 mongo:${{ matrix.mongo-version }}
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
