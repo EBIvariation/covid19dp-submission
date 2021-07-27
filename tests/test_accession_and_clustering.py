@@ -123,9 +123,9 @@ class TestAccessionVcf(TestCase):
     def test_accession_and_clustering(self):
         download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
                                          project_dir=self.download_folder)
-        vcf_files = glob.glob(f"{download_dir}/*.vcf.gz")
+        vcf_file = glob.glob(f"{download_dir}/file1_test_snapshot.vcf.gz")
         output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
-        accession_vcf(input_vcf_file=vcf_files[0], accessioning_jar_file=self.accession_jar_file,
+        accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
                       accessioning_properties_file=self.accessioning_properties_file,
                       output_vcf_file=output_vcf_file, bcftools_binary="bcftools", memory=8)
         cluster_assembly(clustering_assembly="GCA_009858895.3", clustering_jar_file=self.clustering_jar_file,
