@@ -2,19 +2,19 @@ import glob
 import os
 import pymongo
 import shutil
+import yaml
 
-from covid19dp_submission.steps.accession_vcf import accession_vcf
-from covid19dp_submission.steps.cluster_assembly import cluster_assembly
-from covid19dp_submission.steps.download_snapshot import download_snapshot
+from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
 from covid19dp_submission import ROOT_DIR
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from unittest import TestCase
 
 
-class TestAccessionVcf(TestCase):
+class TestIngestCovid19DPSubmission(TestCase):
     resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
     assembly_report_url = os.path.join(resources_folder, 'GCA_009858895.3_ASM985889v3_assembly_report.txt')
     fasta_file = os.path.join(resources_folder, 'GCA_009858895.3_ASM985889v3_genomic.fna')
+    nextflow_config_file = os.path.join(resources_folder, 'nf.config')
 
     download_folder = os.path.join(resources_folder, 'download_snapshot')
     download_target_dir = os.path.join(download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
@@ -24,6 +24,7 @@ class TestAccessionVcf(TestCase):
     accessioning_database_name = "eva_accession"
     accessioning_properties_file = os.path.join(processing_folder, 'accession_config.properties')
     clustering_properties_file = os.path.join(processing_folder, 'clustering.properties')
+    app_config_file = os.path.join(processing_folder, 'app_config.yml')
     accessioning_properties = f"""parameters.projectAccession=PRJEB43947
         accessioning.instanceId=instance-1
         spring.main.allow-bean-definition-overriding=true
@@ -60,35 +61,35 @@ class TestAccessionVcf(TestCase):
         parameters.assemblyAccession=GCA_009858895.3
         parameters.projectAccession=
         parameters.chunkSize=100
-        
+
         accessioning.instanceId=instance-1
         accessioning.submitted.categoryId=ss
         accessioning.clustered.categoryId=rs
-        
+
         accessioning.monotonic.ss.blockSize=100000
         accessioning.monotonic.ss.blockStartValue=5000000000
         accessioning.monotonic.ss.nextBlockInterval=1000000000
         accessioning.monotonic.rs.blockSize=100000
         accessioning.monotonic.rs.blockStartValue=3000000000
         accessioning.monotonic.rs.nextBlockInterval=1000000000
-            
+
         spring.data.mongodb.host=localhost
         spring.data.mongodb.port=27017
         spring.data.mongodb.database=eva_accession
         mongodb.read-preference=primary
-            
+
         spring.datasource.driver-class-name=org.postgresql.Driver
         spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
         spring.datasource.username=postgres
         spring.datasource.password=postgres
         spring.datasource.tomcat.max-active=3
-            
+
         #See https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.1-Release-Notes#bean-overriding
         spring.main.allow-bean-definition-overriding=true
         #As this is a spring batch application, disable the embedded tomcat. This is the new way to do that for spring 2.
         spring.main.web-application-type=none
         spring.main.web-environment=false
-        
+
         spring.jpa.generate-ddl=true
         # This entry is put just to avoid a warning message in the logs when you start the spring-boot application.
         # This bug is from hibernate which tries to retrieve some metadata from postgresql db and failed to find that and logs as a warning
@@ -114,6 +115,14 @@ class TestAccessionVcf(TestCase):
         self.clustering_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-clustering*.jar")[0]
         open(self.accessioning_properties_file, "w").write(self.accessioning_properties)
         open(self.clustering_properties_file, "w").write(self.clustering_properties)
+        app_config = {"app": {"bcftools_binary": "bcftools", "nextflow_binary": "nextflow",
+                              "validator_binary": "vcf_validator_linux",
+                              "accessioning_jar_file": self.accession_jar_file,
+                              "accessioning_properties_file": self.accessioning_properties_file,
+                              "clustering_jar_file": self.clustering_jar_file,
+                              "clustering_properties_file": self.clustering_properties_file},
+                      "submission": {"concat_chunk_size": 100}}
+        yaml.safe_dump(data=app_config, stream=open(self.app_config_file, "w"))
 
         self.mongo_db = pymongo.MongoClient()
         self.mongo_db.drop_database(self.accessioning_database_name)
@@ -123,16 +132,10 @@ class TestAccessionVcf(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
-    def test_accession_and_clustering(self):
-        download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                         download_target_dir=self.download_target_dir)
-        vcf_file = f"{download_dir}/file1_test_snapshot.vcf.gz"
-        output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
-        accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
-                      accessioning_properties_file=self.accessioning_properties_file,
-                      output_vcf_file=output_vcf_file, bcftools_binary="bcftools", memory=8)
-        cluster_assembly(clustering_jar_file=self.clustering_jar_file,
-                         clustering_properties_file=self.clustering_properties_file, memory=8)
-        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity']\
+    def test_ingest_covid19dp_submission(self):
+        ingest_covid19dp_submission(download_url=self.download_url, snapshot_name=None,
+                                    project_dir=self.processing_folder, app_config_file=self.app_config_file,
+                                    nextflow_config_file=self.nextflow_config_file, resume=False)
+        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
             .count_documents(filter={})
-        self.assertEqual(15, num_clustered_variants)
+        self.assertEqual(54, num_clustered_variants)

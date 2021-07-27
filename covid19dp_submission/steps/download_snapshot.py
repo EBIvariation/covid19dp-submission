@@ -25,11 +25,10 @@ logging_config.add_stdout_handler()
 
 
 @retry(exceptions=CalledProcessError, logger=logger, tries=4, delay=240, backoff=1.2, jitter=(1, 3))
-def download_snapshot(download_url: str, snapshot_name: str or None, project_dir: str) -> str:
+def download_snapshot(download_url: str, snapshot_name: str or None, download_target_dir: str) -> str:
     snapshot_name = snapshot_name if snapshot_name else os.path.basename(download_url).replace(".tar.gz", "")
     assert snapshot_name, "Snapshot name cannot be empty!"
 
-    download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
     os.makedirs(download_target_dir, exist_ok=True)
     if os.listdir(download_target_dir):
         raise FileExistsError(f"FAIL: Snapshot already downloaded to target directory: {download_target_dir}. "
@@ -51,10 +50,10 @@ def main():
                         help="URL to the data snapshot (ex: http://path/to/snapshots/YYYY_MM_DD.tar.gz)", required=True)
     parser.add_argument("--snapshot-name", help="Snapshot name (ex: 2021_06_28_filtered_vcf)", default=None,
                         required=False)
-    parser.add_argument("--project-dir", help="Full path to the PRJEB directory", required=True)
+    parser.add_argument("--download-target-dir", help="Full path to the target download directory", required=True)
 
     args = parser.parse_args()
-    download_snapshot(args.download_url, args.snapshot_name, args.project_dir)
+    download_snapshot(args.download_url, args.snapshot_name, args.download_target_dir)
 
 
 if __name__ == "__main__":

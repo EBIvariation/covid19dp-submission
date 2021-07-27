@@ -19,12 +19,13 @@ import math
 import os
 import sys
 
+from .vcf_vertical_concat import vcf_vertical_concat
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
 from ebi_eva_common_pyutils.nextflow import NextFlowPipeline, NextFlowProcess
-from covid19dp_submission.steps.vcf_vertical_concat import vcf_vertical_concat
 
 logger = logging_config.get_logger(__name__)
+logging_config.add_stdout_handler()
 
 
 def get_python_process_command_string(python_program, args: dict, log_file: str):
@@ -125,7 +126,7 @@ def get_output_vcf_file_name(concat_stage_index: int, concat_batch_index: int, c
                         f"concat_output_stage{concat_stage_index}_batch{concat_batch_index}.vcf.gz")
 
 
-def get_merge_result_file_name(concat_processing_dir: str, total_number_of_vcf_files: int,
+def get_concat_result_file_name(concat_processing_dir: str, total_number_of_vcf_files: int,
                                 concat_chunk_size: int) -> str:
     # compute result stage for a multi-level vertical concat
     # ex: if there are 150 files and the files are concatenated 5 files at a time,
@@ -152,7 +153,7 @@ def validate_vertical_concat(input_vcf_dir: str, concat_vcf_file: str) -> bool:
 def run_vcf_vertical_concat_pipeline(toplevel_vcf_dir, concat_processing_dir, concat_chunk_size,
                                      bcftools_binary, nextflow_binary, nextflow_config_file, resume):
     vcf_files = sorted(glob.glob(f"{toplevel_vcf_dir}/*.vcf.gz"))
-    expected_result_file = get_merge_result_file_name(concat_processing_dir, len(vcf_files), concat_chunk_size)
+    expected_result_file = get_concat_result_file_name(concat_processing_dir, len(vcf_files), concat_chunk_size)
     os.makedirs(concat_processing_dir, exist_ok=True)
     if os.listdir(concat_processing_dir):
         raise FileExistsError(f"FAIL: Vertical concatenation processing directory: {concat_processing_dir} "

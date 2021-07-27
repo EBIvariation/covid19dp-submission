@@ -11,6 +11,7 @@ from unittest import TestCase
 class TestBGZipAndIndex(TestCase):
     resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
     download_folder = os.path.join(resources_folder, 'download_snapshot')
+    download_target_dir = os.path.join(download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
     download_url = "file:///" + os.path.join(resources_folder, 'vcf_files', '2021_07_23_test_snapshot.tar.gz')
 
     def setUp(self) -> None:
@@ -21,7 +22,7 @@ class TestBGZipAndIndex(TestCase):
 
     def test_bgzip_and_index(self):
         download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                         project_dir=self.download_folder)
+                                         download_target_dir=self.download_target_dir)
         vcf_files = glob.glob(f"{download_dir}/*.vcf.gz")
         bgzip_and_index(vcf_file=vcf_files[0], bcftools_binary="bcftools")
         self.assertTrue(os.path.exists(vcf_files[0]))

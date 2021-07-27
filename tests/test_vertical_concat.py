@@ -14,6 +14,7 @@ from unittest import TestCase
 class TestVCFVerticalConcat(TestCase):
     resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
     download_folder = os.path.join(resources_folder, 'download_snapshot')
+    download_target_dir = os.path.join(download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
     processing_dir = os.path.join(resources_folder, 'processing_dir')
     download_url = "file:///" + os.path.join(resources_folder, 'vcf_files', '2021_07_23_test_snapshot.tar.gz')
 
@@ -28,7 +29,7 @@ class TestVCFVerticalConcat(TestCase):
     # Tests require nextflow and bcftools installed locally and in PATH
     def test_concat_uninterrupted(self):
         download_target_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                                project_dir=self.download_folder)
+                                                download_target_dir=self.download_target_dir)
         for vcf_file in glob.glob(f"{download_target_dir}/*.vcf.gz"):
             bgzip_and_index(vcf_file, "bcftools")
         #   s0.vcf.gz   s1.vcf.gz   s2.vcf.gz   s3.vcf.gz   s4.vcf.gz
