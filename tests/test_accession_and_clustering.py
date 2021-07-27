@@ -1,5 +1,6 @@
 import glob
 import os
+import pymongo
 import shutil
 
 from covid19dp_submission.steps.accession_vcf import accession_vcf
@@ -97,10 +98,11 @@ class TestAccessionVcf(TestCase):
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         os.makedirs(self.processing_folder)
+
         run_command_with_output("Downloading accessioning JAR file...",
                                 f'bash -c '
                                 f'"cd {self.processing_folder} && git clone https://github.com/EBIVariation/eva-accession '
-                                f'&& cd eva-accession && mvn package -DskipTests '
+                                f'&& cd eva-accession && mvn -q package -DskipTests '
                                 f'&& cp eva-accession-pipeline/target/*.jar '
                                 f'{self.processing_folder} '
                                 f'&& cp eva-accession-clustering/target/*.jar '
@@ -111,11 +113,12 @@ class TestAccessionVcf(TestCase):
         open(self.accessioning_properties_file, "w").write(self.accessioning_properties)
         open(self.clustering_properties_file, "w").write(self.clustering_properties)
 
+        self.mongo_db = pymongo.MongoClient()
+
     def tearDown(self) -> None:
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
-        run_command_with_output("Drop MongoDB database...",
-                                f"mongo --eval \"db.getSiblingDB('{self.accessioning_database_name}').dropDatabase()\"")
+        self.mongo_db.drop_database(self.accessioning_database_name)
 
     def test_accession_and_clustering(self):
         download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
@@ -127,10 +130,6 @@ class TestAccessionVcf(TestCase):
                       output_vcf_file=output_vcf_file, bcftools_binary="bcftools", memory=8)
         cluster_assembly(clustering_assembly="GCA_009858895.3", clustering_jar_file=self.clustering_jar_file,
                          clustering_properties_file=self.clustering_properties_file, memory=8)
-        num_clustered_variants = int(run_command_with_output("Counting clustered variants...",
-                                                             f"mongo --quiet --eval \""
-                                                             f"db.getSiblingDB('{self.accessioning_database_name}')"
-                                                             f".getCollection('clusteredVariantEntity')"
-                                                             f".countDocuments({{}})\"",
-                                                             return_process_output=True))
+        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity']\
+            .count_documents(filter={})
         self.assertEqual(15, num_clustered_variants)

@@ -55,13 +55,10 @@ jobs:
     - name: Set up VCF validator and assembly checker
       run: |
         sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v${{ matrix.vcf-validator-version }}/vcf_validator_linux && chmod 755 vcf_validator_linux"
-    - name: Set up bcftools
+    - name: Set up BCFtools
       run: |
-        mkdir /tmp/conda && cd /tmp/conda
-        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        chmod +x Miniconda3-latest-Linux-x86_64.sh
-        bash Miniconda3-latest-Linux-x86_64.sh -b -p $PWD/miniconda
-        $PWD/miniconda/condabin/conda install -c bioconda samtools bcftools -y
+        sudo apt update
+        sudo apt -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
     - name: Test with pytest
       run: |
         PYTHONPATH=. pytest tests
