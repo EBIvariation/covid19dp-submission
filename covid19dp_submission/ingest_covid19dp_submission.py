@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import argparse
-import covid19dp_submission
 import inspect
 import os
 import sys
@@ -21,7 +20,7 @@ import tarfile
 import urllib.request
 
 from covid19dp_submission import NEXTFLOW_DIR
-from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
+from .steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
 from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from typing import List
@@ -64,7 +63,7 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
                 'log_dir': log_dir, 'validation_dir': validation_dir
                 })
     config['app']['python'] = {'interpreter': sys.executable,
-                               'script_path': os.path.dirname(inspect.getmodule(covid19dp_submission).__file__)}
+                               'script_path': os.path.dirname(inspect.getmodule(sys.modules[__name__]).__file__)}
     config['app']['nextflow_config_file'] = nextflow_config_file
     return config
 
