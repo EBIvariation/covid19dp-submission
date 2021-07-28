@@ -47,25 +47,25 @@ shell:
 }}
 
 process accession_vcf {{
-clusterOptions "-g /accession/instance-10"
+clusterOptions "-g /accession/{app[accessioning_instance]}"
 input:
 val flag from vertical_concat_success
 output:
 val true into accession_vcf_success
 shell:
 '''
-(export PYTHONPATH="{app[python][script_path]}" && {app[python][interpreter]} -m steps.accession_vcf --vcf-file {submission[concat_result_file]} --accessioning-jar-file {app[accessioning_jar_file]} --accessioning-properties-file {app[accessioning_properties_file]} --output-vcf-file {submission[accession_output_file]} --bcftools-binary {app[bcftools_binary]})  >> {submission[log_dir]}/accession_vcf.log 2>&1
+(export PYTHONPATH="{app[python][script_path]}" && {app[python][interpreter]} -m steps.accession_vcf --vcf-file {submission[concat_result_file]} --accessioning-jar-file {app[accessioning_jar_file]} --accessioning-properties-file {app[accessioning_properties_file]} --accessioning-instance {app[accessioning_instance]} --output-vcf-file {submission[accession_output_file]} --bcftools-binary {app[bcftools_binary]})  >> {submission[log_dir]}/accession_vcf.log 2>&1
 '''
 }}
 
-process sync_to_public_ftp {{
+process sync_accessions_to_public_ftp {{
 input:
 val flag from accession_vcf_success
 output:
-val true into sync_to_public_ftp_success
+val true into sync_accessions_to_public_ftp_success
 shell:
 '''
-rsync -av {submission[accession_output_dir]}/* {submission[ftp_project_dir]}
+(rsync -av {submission[accession_output_dir]}/* {submission[ftp_project_dir]}) >> {submission[log_dir]}/sync_accessions_to_public_ftp.log 2>&1
 '''
 }}
 
@@ -76,6 +76,6 @@ output:
 val true into cluster_assembly_success
 shell:
 '''
-(export PYTHONPATH="{app[python][script_path]}" && {app[python][interpreter]} -m steps.cluster_assembly --clustering-jar-file {app[clustering_jar_file]} --clustering-properties-file {app[clustering_properties_file]})  >> {submission[log_dir]}/cluster_assembly.log 2>&1
+(export PYTHONPATH="{app[python][script_path]}" && {app[python][interpreter]} -m steps.cluster_assembly --clustering-jar-file {app[clustering_jar_file]} --clustering-properties-file {app[clustering_properties_file]} --accessioning-instance {app[accessioning_instance]})  >> {submission[log_dir]}/cluster_assembly.log 2>&1
 '''
 }}

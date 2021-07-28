@@ -130,9 +130,11 @@ class TestAccessionVcf(TestCase):
         output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
         accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
                       accessioning_properties_file=self.accessioning_properties_file,
-                      output_vcf_file=output_vcf_file, bcftools_binary="bcftools", memory=8)
+                      accessioning_instance="instance-10", output_vcf_file=output_vcf_file, bcftools_binary="bcftools",
+                      memory=8)
         cluster_assembly(clustering_jar_file=self.clustering_jar_file,
-                         clustering_properties_file=self.clustering_properties_file, memory=8)
+                         clustering_properties_file=self.clustering_properties_file,
+                         accessioning_instance="instance-10", memory=8)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity']\
             .count_documents(filter={})
         self.assertEqual(15, num_clustered_variants)

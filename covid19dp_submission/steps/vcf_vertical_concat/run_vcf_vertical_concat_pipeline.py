@@ -193,7 +193,8 @@ def main():
                         help="Indicate if a previous concatenation job is to be resumed", action='store_true',
                         required=False)
     args = parser.parse_args()
-    run_vcf_vertical_concat_pipeline(**vars(args))
+    run_vcf_vertical_concat_pipeline(args.toplevel_vcf_dir, args.concat_processing_dir, args.concat_chunk_size,
+                                     args.bcftools_binary, args.nextflow_binary, args.nextflow_config_file, args.resume)
 
 
 if __name__ == "__main__":

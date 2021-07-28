@@ -37,12 +37,13 @@ def compare_input_output_vcfs(input_vcf_file: str, output_vcf_file: str) -> bool
 
 
 def accession_vcf(input_vcf_file: str, accessioning_jar_file: str, accessioning_properties_file: str,
-                  output_vcf_file: str, bcftools_binary: str, memory: int) -> str:
+                  accessioning_instance: str, output_vcf_file: str, bcftools_binary: str, memory: int) -> str:
     assert not os.path.exists(output_vcf_file), f"FAIL: Output VCF file {output_vcf_file} already exists."
     accession_command = f"java -Xmx{memory}g -jar {accessioning_jar_file} " \
                         f"--spring.config.location={accessioning_properties_file} " \
                         f"--parameters.vcf={input_vcf_file} " \
-                        f"--parameters.outputVcf={output_vcf_file}"
+                        f"--parameters.outputVcf={output_vcf_file} " \
+                        f"--accessioning.instanceId={accessioning_instance}"
     run_command_with_output(f"Running accession for file: {input_vcf_file}...", accession_command)
     compressed_output_vcf_file = bgzip_and_index(output_vcf_file, bcftools_binary)
     assert compare_input_output_vcfs(input_vcf_file, compressed_output_vcf_file), \
@@ -62,6 +63,8 @@ def main():
     parser.add_argument("--accessioning-properties-file",
                         help="Full path to the accessioning configuration (ex: /path/to/accessioning.properties)",
                         required=True)
+    parser.add_argument("--accessioning-instance",help="Instance to be used for accession (ex: instance-10)",
+                        required=True)
     parser.add_argument("--output-vcf-file",
                         help="Full path to the output VCF file (ex: /path/to/accessioned_output_file.vcf)",
                         required=True)
@@ -69,8 +72,8 @@ def main():
                         default="bcftools", required=False)
     parser.add_argument("--memory", help="Memory allocation (in GB)", type=int, default=16, required=False)
     args = parser.parse_args()
-    accession_vcf(args.vcf_file, args.accessioning_jar_file, args.accessioning_properties_file, args.output_vcf_file,
-                  args.bcftools_binary, args.memory)
+    accession_vcf(args.vcf_file, args.accessioning_jar_file, args.accessioning_properties_file,
+                  args.accessioning_instance, args.output_vcf_file, args.bcftools_binary, args.memory)
 
 
 if __name__ == "__main__":

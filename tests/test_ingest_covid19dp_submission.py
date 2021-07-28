@@ -25,8 +25,7 @@ class TestIngestCovid19DPSubmission(TestCase):
     accessioning_properties_file = os.path.join(processing_folder, 'accession_config.properties')
     clustering_properties_file = os.path.join(processing_folder, 'clustering.properties')
     app_config_file = os.path.join(processing_folder, 'app_config.yml')
-    accessioning_properties = f"""parameters.projectAccession=PRJEB43947
-        accessioning.instanceId=instance-1
+    accessioning_properties = f"""parameters.projectAccession=PRJEB43947        
         spring.main.allow-bean-definition-overriding=true
         spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
         spring.jpa.generate-ddl=true
@@ -60,9 +59,8 @@ class TestIngestCovid19DPSubmission(TestCase):
         parameters.vcf=
         parameters.assemblyAccession=GCA_009858895.3
         parameters.projectAccession=
-        parameters.chunkSize=100
-
-        accessioning.instanceId=instance-1
+        parameters.chunkSize=100        
+        
         accessioning.submitted.categoryId=ss
         accessioning.clustered.categoryId=rs
 
@@ -119,6 +117,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                    "validator_binary": "vcf_validator_linux",
                                    "accessioning_jar_file": self.accession_jar_file,
                                    "accessioning_properties_file": self.accessioning_properties_file,
+                                   "accessioning_instance": "instance-10",
                                    "clustering_jar_file": self.clustering_jar_file,
                                    "clustering_properties_file": self.clustering_properties_file},
                            "submission": {"concat_chunk_size": 100,

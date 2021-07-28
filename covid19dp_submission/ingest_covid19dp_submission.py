@@ -70,7 +70,7 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
 
 
 def ingest_covid19dp_submission(download_url: str, snapshot_name: str or None,  project_dir: str,
-                                nextflow_config_file: str or None, app_config_file: str, resume: bool):
+                                app_config_file: str, nextflow_config_file: str or None, resume: bool):
     snapshot_name = snapshot_name if snapshot_name else os.path.basename(download_url).replace(".tar.gz", "")
     config = _get_config(download_url, snapshot_name, project_dir, nextflow_config_file, app_config_file)
 
@@ -101,7 +101,8 @@ def main():
                         help="Indicate if a previous concatenation job is to be resumed", action='store_true',
                         required=False)
     args = parser.parse_args()
-    ingest_covid19dp_submission(**vars(args))
+    ingest_covid19dp_submission(args.download_url, args.snapshot_name, args.project_dir, args.app_config_file,
+                                args.nextflow_config_file, args.resume)
 
 
 if __name__ == "__main__":
