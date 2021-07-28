@@ -10,7 +10,7 @@ shell:
 }}
 
 process validate_vcfs {{
-Channel.fromList({submission[download_files]}).set{{vcf_file_list}}
+Channel.fromPath('{submission[download_file_list]}').splitCsv(header:false).map(row -> row[0]).set{{vcf_file_list}}
 input:
 val flag from download_snapshot_success
 val vcf_file from vcf_file_list
@@ -23,7 +23,7 @@ shell:
 }}
 
 process bgzip_and_index {{
-Channel.fromList({submission[download_files]}).set{{vcf_file_list}}
+Channel.fromPath('{submission[download_file_list]}').splitCsv(header:false).map(row -> row[0]).set{{vcf_file_list}}
 input:
 val flag from validate_vcfs_success.collect()
 val vcf_file from vcf_file_list
@@ -47,6 +47,7 @@ shell:
 }}
 
 process accession_vcf {{
+clusterOptions "-g /accession/instance-10"
 input:
 val flag from vertical_concat_success
 output:
@@ -54,6 +55,17 @@ val true into accession_vcf_success
 shell:
 '''
 (export PYTHONPATH="{app[python][script_path]}" && {app[python][interpreter]} -m steps.accession_vcf --vcf-file {submission[concat_result_file]} --accessioning-jar-file {app[accessioning_jar_file]} --accessioning-properties-file {app[accessioning_properties_file]} --output-vcf-file {submission[accession_output_file]} --bcftools-binary {app[bcftools_binary]})  >> {submission[log_dir]}/accession_vcf.log 2>&1
+'''
+}}
+
+process sync_to_public_ftp {{
+input:
+val flag from accession_vcf_success
+output:
+val true into sync_to_public_ftp_success
+shell:
+'''
+rsync -av {submission[accession_output_dir]}/* {submission[ftp_project_dir]}
 '''
 }}
 

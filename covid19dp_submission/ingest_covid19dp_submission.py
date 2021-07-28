@@ -38,7 +38,11 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
                 app_config_file: str) -> dict:
     config = get_args_from_private_config_file(app_config_file)
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
+    os.makedirs(download_target_dir, exist_ok=True)
+    os.makedirs(config['submission']['ftp_project_dir'], exist_ok=True)
     download_files = get_submission_snapshot_file_list(download_url)
+    download_file_list = os.path.join(download_target_dir, 'file_list.csv')
+    open(download_file_list, "w").write('\n'.join(download_files))
     concat_processing_dir = os.path.join(download_target_dir, 'processed')
 
     log_dir = os.path.join(project_dir, '00_logs', snapshot_name)
@@ -50,11 +54,12 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
 
     config['submission'].update(
                {'download_url': download_url, 'snapshot_name': snapshot_name,
-                'download_target_dir': download_target_dir, 'download_files': download_files,
+                'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
                 # Directory to process vertical concatenation of submitted VCF files
                 'concat_processing_dir': concat_processing_dir,
                 'concat_result_file': get_concat_result_file_name(concat_processing_dir, len(download_files),
                                                                   config['submission']['concat_chunk_size']),
+                'accession_output_dir': accession_output_dir,
                 'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
                 'log_dir': log_dir, 'validation_dir': validation_dir
                 })

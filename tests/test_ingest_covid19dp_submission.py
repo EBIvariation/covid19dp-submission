@@ -115,14 +115,15 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.clustering_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-clustering*.jar")[0]
         open(self.accessioning_properties_file, "w").write(self.accessioning_properties)
         open(self.clustering_properties_file, "w").write(self.clustering_properties)
-        app_config = {"app": {"bcftools_binary": "bcftools", "nextflow_binary": "nextflow",
-                              "validator_binary": "vcf_validator_linux",
-                              "accessioning_jar_file": self.accession_jar_file,
-                              "accessioning_properties_file": self.accessioning_properties_file,
-                              "clustering_jar_file": self.clustering_jar_file,
-                              "clustering_properties_file": self.clustering_properties_file},
-                      "submission": {"concat_chunk_size": 100}}
-        yaml.safe_dump(data=app_config, stream=open(self.app_config_file, "w"))
+        self.app_config = {"app": {"bcftools_binary": "bcftools", "nextflow_binary": "nextflow",
+                                   "validator_binary": "vcf_validator_linux",
+                                   "accessioning_jar_file": self.accession_jar_file,
+                                   "accessioning_properties_file": self.accessioning_properties_file,
+                                   "clustering_jar_file": self.clustering_jar_file,
+                                   "clustering_properties_file": self.clustering_properties_file},
+                           "submission": {"concat_chunk_size": 100,
+                                          "ftp_project_dir": f"{self.download_folder}/ftp"}}
+        yaml.safe_dump(data=self.app_config, stream=open(self.app_config_file, "w"))
 
         self.mongo_db = pymongo.MongoClient()
         self.mongo_db.drop_database(self.accessioning_database_name)
@@ -139,3 +140,5 @@ class TestIngestCovid19DPSubmission(TestCase):
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
             .count_documents(filter={})
         self.assertEqual(54, num_clustered_variants)
+        # check if files are synchronized to the ftp dir
+        self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['ftp_project_dir']}/*")))

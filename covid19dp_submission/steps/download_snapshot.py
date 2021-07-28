@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import glob
 import os
 
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
@@ -30,7 +31,7 @@ def download_snapshot(download_url: str, snapshot_name: str or None, download_ta
     assert snapshot_name, "Snapshot name cannot be empty!"
 
     os.makedirs(download_target_dir, exist_ok=True)
-    if os.listdir(download_target_dir):
+    if glob.glob(f"{download_target_dir}/*.vcf.gz"):
         raise FileExistsError(f"FAIL: Snapshot already downloaded to target directory: {download_target_dir}. "
                               f"Please delete that directory to re-download.")
     download_file_name = os.path.basename(download_url)
