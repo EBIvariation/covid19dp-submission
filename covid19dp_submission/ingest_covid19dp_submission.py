@@ -19,6 +19,8 @@ import sys
 import tarfile
 import urllib.request
 
+import yaml
+
 from covid19dp_submission import NEXTFLOW_DIR
 from .steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
 from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
@@ -33,31 +35,37 @@ def get_submission_snapshot_file_list(download_url: str) -> List[str]:
                    if member.name.lower().endswith(".vcf.gz")])
 
 
+def _create_required_dirs(config: dict):
+    required_dirs = [config['submission']['download_target_dir'], config['submission']['concat_processing_dir'],
+                     config['submission']['accession_output_dir'], config['submission']['ftp_project_dir'],
+                     config['submission']['log_dir'], config['submission']['validation_dir']]
+    for dir_name in required_dirs:
+        os.makedirs(dir_name, exist_ok=True)
+
+
+def _create_download_file_list(config: dict):
+    download_file_list = get_submission_snapshot_file_list(config['submission']['download_url'])
+    open(config['submission']['download_file_list'], "w").write('\n'.join(download_file_list))
+    return download_file_list
+
+
 def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflow_config_file: str,
                 app_config_file: str) -> dict:
     config = get_args_from_private_config_file(app_config_file)
-    download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
-    os.makedirs(download_target_dir, exist_ok=True)
-    os.makedirs(config['submission']['ftp_project_dir'], exist_ok=True)
-    download_files = get_submission_snapshot_file_list(download_url)
-    download_file_list = os.path.join(download_target_dir, 'file_list.csv')
-    open(download_file_list, "w").write('\n'.join(download_files))
-    concat_processing_dir = os.path.join(download_target_dir, 'processed')
 
+    download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
+    download_file_list = os.path.join(download_target_dir, 'file_list.csv')
+    submission_param_file = os.path.join(download_target_dir, 'nf_params.yml')
+    concat_processing_dir = os.path.join(download_target_dir, 'processed')
     log_dir = os.path.join(project_dir, '00_logs', snapshot_name)
-    os.makedirs(log_dir, exist_ok=True)
     validation_dir = os.path.join(log_dir, 'validation')
-    os.makedirs(validation_dir, exist_ok=True)
     accession_output_dir = os.path.join(project_dir, '60_eva_public', snapshot_name)
-    os.makedirs(accession_output_dir, exist_ok=True)
 
     config['submission'].update(
                {'download_url': download_url, 'snapshot_name': snapshot_name,
                 'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
                 # Directory to process vertical concatenation of submitted VCF files
                 'concat_processing_dir': concat_processing_dir,
-                'concat_result_file': get_concat_result_file_name(concat_processing_dir, len(download_files),
-                                                                  config['submission']['concat_chunk_size']),
                 'accession_output_dir': accession_output_dir,
                 'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
                 'log_dir': log_dir, 'validation_dir': validation_dir
@@ -65,6 +73,8 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
     config['app']['python'] = {'interpreter': sys.executable,
                                'script_path': os.path.dirname(inspect.getmodule(sys.modules[__name__]).__file__)}
     config['app']['nextflow_config_file'] = nextflow_config_file
+    config['app']['nextflow_param_file'] = submission_param_file
+
     return config
 
 
@@ -72,15 +82,22 @@ def ingest_covid19dp_submission(download_url: str, snapshot_name: str or None,  
                                 app_config_file: str, nextflow_config_file: str or None, resume: bool):
     snapshot_name = snapshot_name if snapshot_name else os.path.basename(download_url).replace(".tar.gz", "")
     config = _get_config(download_url, snapshot_name, project_dir, nextflow_config_file, app_config_file)
+    _create_required_dirs(config)
+    # Compute the file path where the output of multi-stage vertical concatenation will reside
+    # based on the number of files to be processed
+    vcf_files_to_be_downloaded = _create_download_file_list(config)
+    config['submission']['concat_result_file'] = \
+        get_concat_result_file_name(config['submission']['concat_processing_dir'], len(vcf_files_to_be_downloaded),
+                                    config['submission']['concat_chunk_size'])
 
-    nextflow_template_file = os.path.join(NEXTFLOW_DIR, 'submission_workflow_template.nf')
-    nextflow_template = open(nextflow_template_file).read()
-    nextflow_file_to_run = os.path.join(os.getcwd(), f"submission_{snapshot_name}.nf")
-    open(nextflow_file_to_run, "w").write(nextflow_template.format(**config))
+    nextflow_file_to_run = os.path.join(NEXTFLOW_DIR, 'submission_workflow.nf')
+    yaml.safe_dump(config, open(config['app']['nextflow_param_file'], "w"))
 
     run_nextflow_command = f"{config['app']['nextflow_binary']} run {nextflow_file_to_run}"
     run_nextflow_command += f" -c {nextflow_config_file}" if nextflow_config_file else ""
     run_nextflow_command += f" -resume" if resume else ""
+    run_nextflow_command += f" --PYTHONPATH {config['app']['python']['script_path']}"
+    run_nextflow_command += f" -params-file {config['app']['nextflow_param_file']}"
     run_command_with_output(f"Running submission pipeline: {nextflow_file_to_run}...", run_nextflow_command)
 
 

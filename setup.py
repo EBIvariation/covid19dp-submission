@@ -2,7 +2,7 @@ import glob
 from distutils.core import setup
 from os.path import join, abspath, dirname
 
-base_dir = abspath(dirname(__file__))
+base_dir = dirname(__file__)
 requirements_txt = join(base_dir, 'requirements.txt')
 requirements = [l.strip() for l in open(requirements_txt) if l and not l.startswith('#')]
 
@@ -25,5 +25,5 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3'
     ],
-    scripts=glob.glob(join(dirname(__file__), '*.py'))
+    scripts=glob.glob(join(base_dir, '*.py'))
 )
