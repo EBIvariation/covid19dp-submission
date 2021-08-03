@@ -1,0 +1,12 @@
+app:
+  bcftools_binary: /path/to/bcftools
+  nextflow_binary: /path/to/nextflow
+  validator_binary: /path/to/vcf-validator
+  accessioning_jar_file: /path/to/eva-accession-pipeline.jar
+  accessioning_properties_file: /path/to/accessioning.properties
+  accessioning_instance: instance-10
+  clustering_jar_file: /path/to/eva-accession-clustering.jar
+  clustering_properties_file: /path/to/clustering.properties
+submission:
+  concat_chunk_size: 100
+  ftp_project_dir: /path/to/ftp/project/dir
