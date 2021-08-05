@@ -1,0 +1,16 @@
+executable:
+  nextflow: nextflow
+  vcf_assembly_checker: vcf_assembly_checker_linux
+  vcf_validator: vcf_validator_linux
+  bcftools: bcftools
+
+jar:
+  accession_pipeline: {accession_jar_file}
+  clustering_pipeline: {clustering_jar_file}
+
+submission:
+  accessioning_properties_file: {accessioning_properties_file}
+  clustering_properties_file: {clustering_properties_file}
+  concat_chunk_size: 100
+  public_ftp_dir: {download_folder}/ftp
+  accessioning_instance: instance-10

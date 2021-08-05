@@ -37,7 +37,7 @@ def get_submission_snapshot_file_list(download_url: str) -> List[str]:
 
 def _create_required_dirs(config: dict):
     required_dirs = [config['submission']['download_target_dir'], config['submission']['concat_processing_dir'],
-                     config['submission']['accession_output_dir'], config['submission']['ftp_project_dir'],
+                     config['submission']['accession_output_dir'], config['submission']['public_ftp_dir'],
                      config['submission']['log_dir'], config['submission']['validation_dir']]
     for dir_name in required_dirs:
         os.makedirs(dir_name, exist_ok=True)
@@ -70,10 +70,10 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
                 'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
                 'log_dir': log_dir, 'validation_dir': validation_dir
                 })
-    config['app']['python'] = {'interpreter': sys.executable,
+    config['executable']['python'] = {'interpreter': sys.executable,
                                'script_path': os.path.dirname(inspect.getmodule(sys.modules[__name__]).__file__)}
-    config['app']['nextflow_config_file'] = nextflow_config_file
-    config['app']['nextflow_param_file'] = submission_param_file
+    config['executable']['nextflow_config_file'] = nextflow_config_file
+    config['executable']['nextflow_param_file'] = submission_param_file
 
     return config
 
@@ -91,13 +91,13 @@ def ingest_covid19dp_submission(download_url: str, snapshot_name: str or None,  
                                     config['submission']['concat_chunk_size'])
 
     nextflow_file_to_run = os.path.join(NEXTFLOW_DIR, 'submission_workflow.nf')
-    yaml.safe_dump(config, open(config['app']['nextflow_param_file'], "w"))
+    yaml.safe_dump(config, open(config['executable']['nextflow_param_file'], "w"))
 
-    run_nextflow_command = f"{config['app']['nextflow_binary']} run {nextflow_file_to_run}"
+    run_nextflow_command = f"{config['executable']['nextflow']} run {nextflow_file_to_run}"
     run_nextflow_command += f" -c {nextflow_config_file}" if nextflow_config_file else ""
     run_nextflow_command += f" -resume" if resume else ""
-    run_nextflow_command += f" --PYTHONPATH {config['app']['python']['script_path']}"
-    run_nextflow_command += f" -params-file {config['app']['nextflow_param_file']}"
+    run_nextflow_command += f" --PYTHONPATH {config['executable']['python']['script_path']}"
+    run_nextflow_command += f" -params-file {config['executable']['nextflow_param_file']}"
     run_command_with_output(f"Running submission pipeline: {nextflow_file_to_run}...", run_nextflow_command)
 
 

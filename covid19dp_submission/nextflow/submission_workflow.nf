@@ -7,8 +7,8 @@ process download_snapshot {
     
     script:
     """
-    export PYTHONPATH="$params.app.python.script_path"
-    ($params.app.python.interpreter \
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
         -m steps.download_snapshot \
         --download-url $params.submission.download_url \
         --snapshot-name $params.submission.snapshot_name \
@@ -29,11 +29,11 @@ process validate_vcfs {
     
     script:
     """
-    export PYTHONPATH="$params.app.python.script_path"
-    ($params.app.python.interpreter \
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
         -m steps.run_vcf_validator \
         --vcf-file $params.submission.download_target_dir/$vcf_file \
-        --validator-binary $params.app.validator_binary \
+        --validator-binary $params.executable.vcf_validator \
         --output-dir $params.submission.validation_dir \
     ) >> $params.submission.log_dir/validate_vcfs.log 2>&1
     """
@@ -51,11 +51,11 @@ process bgzip_and_index {
     
     script:
     """
-    export PYTHONPATH="$params.app.python.script_path"
-    ($params.app.python.interpreter \
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
         -m steps.bgzip_and_index_vcf \
         --vcf-file $params.submission.download_target_dir/$vcf_file \
-        --bcftools-binary $params.app.bcftools_binary \
+        --bcftools-binary $params.executable.bcftools \
     ) >> $params.submission.log_dir/bgzip_and_index_vcfs.log 2>&1
     """
 }
@@ -69,21 +69,21 @@ process vertical_concat {
     
     script:
     """
-    export PYTHONPATH="$params.app.python.script_path"
-    ($params.app.python.interpreter \
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
         -m steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline \
         --toplevel-vcf-dir $params.submission.download_target_dir \
         --concat-processing-dir $params.submission.concat_processing_dir \
         --concat-chunk-size $params.submission.concat_chunk_size \
-        --bcftools-binary $params.app.bcftools_binary \
-        --nextflow-binary $params.app.nextflow_binary \
-        --nextflow-config-file $params.app.nextflow_config_file \
+        --bcftools-binary $params.executable.bcftools \
+        --nextflow-binary $params.executable.nextflow \
+        --nextflow-config-file $params.executable.nextflow_config_file \
     ) >> $params.submission.log_dir/vertical_concat.log 2>&1
     """
 }
 
 process accession_vcf {
-    clusterOptions "-g /accession/$params.app.accessioning_instance"
+    clusterOptions "-g /accession/$params.submission.accessioning_instance"
     
     input:
     val flag from vertical_concat_success
@@ -94,15 +94,15 @@ process accession_vcf {
     script:
     //Accessioning properties file passed via command line should already be populated with project and assembly accessions
     """
-    export PYTHONPATH="$params.app.python.script_path"
-    ($params.app.python.interpreter \
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
         -m steps.accession_vcf \
         --vcf-file $params.submission.concat_result_file \
-        --accessioning-jar-file $params.app.accessioning_jar_file \
-        --accessioning-properties-file $params.app.accessioning_properties_file \
-        --accessioning-instance $params.app.accessioning_instance \
+        --accessioning-jar-file $params.jar.accession_pipeline \
+        --accessioning-properties-file $params.submission.accessioning_properties_file \
+        --accessioning-instance $params.submission.accessioning_instance \
         --output-vcf-file $params.submission.accession_output_file \
-        --bcftools-binary $params.app.bcftools_binary \
+        --bcftools-binary $params.executable.bcftools \
     )  >> $params.submission.log_dir/accession_vcf.log 2>&1
     """
 }
@@ -116,7 +116,7 @@ process sync_accessions_to_public_ftp {
     
     script:
     """
-    (rsync -av $params.submission.accession_output_dir/* $params.submission.ftp_project_dir) \
+    (rsync -av $params.submission.accession_output_dir/* $params.submission.public_ftp_dir) \
     >> $params.submission.log_dir/sync_accessions_to_public_ftp.log 2>&1
     """
 }
@@ -131,12 +131,12 @@ process cluster_assembly {
     script:
     //Clustering properties file passed via command line should already be populated with project and assembly accessions
     """
-    export PYTHONPATH="$params.app.python.script_path"
-    ($params.app.python.interpreter \
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
         -m steps.cluster_assembly \
-        --clustering-jar-file $params.app.clustering_jar_file \
-        --clustering-properties-file $params.app.clustering_properties_file \
-        --accessioning-instance $params.app.accessioning_instance \
+        --clustering-jar-file $params.jar.clustering_pipeline \
+        --clustering-properties-file $params.submission.clustering_properties_file \
+        --accessioning-instance $params.submission.accessioning_instance \
     )  >> $params.submission.log_dir/cluster_assembly.log 2>&1
     """
 }

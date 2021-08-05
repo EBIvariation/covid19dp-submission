@@ -11,98 +11,40 @@ from unittest import TestCase
 
 
 class TestIngestCovid19DPSubmission(TestCase):
-    resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
-    assembly_report_url = os.path.join(resources_folder, 'GCA_009858895.3_ASM985889v3_assembly_report.txt')
-    fasta_file = os.path.join(resources_folder, 'GCA_009858895.3_ASM985889v3_genomic.fna')
-    nextflow_config_file = os.path.join(resources_folder, 'nf.config')
 
-    download_folder = os.path.join(resources_folder, 'download_snapshot')
-    download_target_dir = os.path.join(download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
-    download_url = "file:///" + os.path.join(resources_folder, 'vcf_files', '2021_07_23_test_snapshot.tar.gz')
+    def __init__(self, *args, **kwargs):
+        super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
+        self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
+        self.assembly_report_url = os.path.join(self.resources_folder,
+                                                'GCA_009858895.3_ASM985889v3_assembly_report.txt')
+        self.fasta_file = os.path.join(self.resources_folder, 'GCA_009858895.3_ASM985889v3_genomic.fna')
+        self.nextflow_config_file = os.path.join(self.resources_folder, 'nf.config')
 
-    processing_folder = os.path.join(resources_folder, 'processing')
-    accessioning_database_name = "eva_accession"
-    accessioning_properties_file = os.path.join(processing_folder, 'accession_config.properties')
-    clustering_properties_file = os.path.join(processing_folder, 'clustering.properties')
-    app_config_file = os.path.join(processing_folder, 'app_config.yml')
-    accessioning_properties = f"""parameters.projectAccession=PRJEB43947        
-        spring.main.allow-bean-definition-overriding=true
-        spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
-        spring.jpa.generate-ddl=true
-        parameters.assemblyAccession=GCA_009858895.3
-        spring.data.mongodb.database={accessioning_database_name}
-        parameters.contigNaming=NO_REPLACEMENT
-        parameters.taxonomyAccession=2697049        
-        parameters.forceRestart=false
-        parameters.assemblyReportUrl=file:{assembly_report_url}
-        accessioning.monotonic.ss.blockSize=100000
-        spring.datasource.password=postgres
-        spring.datasource.driver-class-name=org.postgresql.Driver
-        accessioning.monotonic.ss.nextBlockInterval=1000000000
-        spring.main.web-environment=false
-        accessioning.monotonic.ss.blockStartValue=5000000000
-        spring.datasource.username=postgres
-        spring.data.mongodb.port=27017
-        mongodb.read-preference=primary
-        parameters.chunkSize=100        
-        spring.datasource.tomcat.max-active=3
-        spring.data.mongodb.host=localhost
-        parameters.fasta={fasta_file}
-        parameters.vcfAggregation=BASIC
-        spring.batch.job.names=CREATE_SUBSNP_ACCESSION_JOB
-        spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
-        accessioning.submitted.categoryId=ss
-        spring.main.web-application-type=NONE
-        spring.batch.initialize-schema=always
-        """
-    clustering_properties = """spring.batch.job.names=CLUSTERING_FROM_MONGO_JOB
-        parameters.vcf=
-        parameters.assemblyAccession=GCA_009858895.3
-        parameters.projectAccession=
-        parameters.chunkSize=100        
-        
-        accessioning.submitted.categoryId=ss
-        accessioning.clustered.categoryId=rs
-
-        accessioning.monotonic.ss.blockSize=100000
-        accessioning.monotonic.ss.blockStartValue=5000000000
-        accessioning.monotonic.ss.nextBlockInterval=1000000000
-        accessioning.monotonic.rs.blockSize=100000
-        accessioning.monotonic.rs.blockStartValue=3000000000
-        accessioning.monotonic.rs.nextBlockInterval=1000000000
-
-        spring.data.mongodb.host=localhost
-        spring.data.mongodb.port=27017
-        spring.data.mongodb.database=eva_accession
-        mongodb.read-preference=primary
-
-        spring.datasource.driver-class-name=org.postgresql.Driver
-        spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
-        spring.datasource.username=postgres
-        spring.datasource.password=postgres
-        spring.datasource.tomcat.max-active=3
-
-        #See https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.1-Release-Notes#bean-overriding
-        spring.main.allow-bean-definition-overriding=true
-        #As this is a spring batch application, disable the embedded tomcat. This is the new way to do that for spring 2.
-        spring.main.web-application-type=none
-        spring.main.web-environment=false
-
-        spring.jpa.generate-ddl=true
-        # This entry is put just to avoid a warning message in the logs when you start the spring-boot application.
-        # This bug is from hibernate which tries to retrieve some metadata from postgresql db and failed to find that and logs as a warning
-        # It doesnt cause any issue though.
-        spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation = true
-        """
-
-    def setUp(self) -> None:
+        self.download_folder = os.path.join(self.resources_folder, 'download_snapshot')
+        self.download_target_dir = os.path.join(self.download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
+        self.download_url = "file:///" + os.path.join(self.resources_folder, 'vcf_files',
+                                                      '2021_07_23_test_snapshot.tar.gz')
+        self.processing_folder = os.path.join(self.resources_folder, 'processing')
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         os.makedirs(self.processing_folder)
 
+        self.accessioning_database_name = "eva_accession"
+        self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
+        self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
+        self.app_config_file = os.path.join(self.processing_folder, 'app_config.yml')
+        accessioning_properties = open(os.path.join(self.resources_folder, 'properties', 'accessioning.properties'))\
+            .read().format(**self.__dict__)
+        clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
+            .read().format(**self.__dict__)
+        open(self.accessioning_properties_file, "w").write(accessioning_properties)
+        open(self.clustering_properties_file, "w").write(clustering_properties)
+
+    def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",
                                 f'bash -c '
-                                f'"cd {self.processing_folder} && git clone https://github.com/EBIVariation/eva-accession '
+                                f'"cd {self.processing_folder} '
+                                f'&& git clone https://github.com/EBIVariation/eva-accession '
                                 f'&& cd eva-accession && mvn -q package -DskipTests '
                                 f'&& cp eva-accession-pipeline/target/*.jar '
                                 f'{self.processing_folder} '
@@ -111,17 +53,9 @@ class TestIngestCovid19DPSubmission(TestCase):
                                 f'&& cd {self.processing_folder} && rm -rf eva-accession"')
         self.accession_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-pipeline*.jar")[0]
         self.clustering_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-clustering*.jar")[0]
-        open(self.accessioning_properties_file, "w").write(self.accessioning_properties)
-        open(self.clustering_properties_file, "w").write(self.clustering_properties)
-        self.app_config = {"app": {"bcftools_binary": "bcftools", "nextflow_binary": "nextflow",
-                                   "validator_binary": "vcf_validator_linux",
-                                   "accessioning_jar_file": self.accession_jar_file,
-                                   "accessioning_properties_file": self.accessioning_properties_file,
-                                   "accessioning_instance": "instance-10",
-                                   "clustering_jar_file": self.clustering_jar_file,
-                                   "clustering_properties_file": self.clustering_properties_file},
-                           "submission": {"concat_chunk_size": 100,
-                                          "ftp_project_dir": f"{self.download_folder}/ftp"}}
+
+        self.app_config = yaml.safe_load(open(os.path.join(self.resources_folder, 'properties', 'app_config.yml'))
+                                         .read().format(**self.__dict__))
         yaml.safe_dump(data=self.app_config, stream=open(self.app_config_file, "w"))
 
         self.mongo_db = pymongo.MongoClient()
@@ -140,4 +74,4 @@ class TestIngestCovid19DPSubmission(TestCase):
             .count_documents(filter={})
         self.assertEqual(54, num_clustered_variants)
         # check if files are synchronized to the ftp dir
-        self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['ftp_project_dir']}/*")))
+        self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
