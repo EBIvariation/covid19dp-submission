@@ -1,8 +1,8 @@
-#Covid-19 Data Portal Submission Automation
+# Covid-19 Data Portal Submission Automation
 
 This repository contains automation scripts to process submissions from the Covid-19 data portal project: https://www.covid19dataportal.org/
 
-##Usage
+## Usage
 
 ``` 
 python3 -m covid19dp_submission.ingest_covid19dp_submission --download-url http://path/to/covid19dp/snapshot/YYYY_MM_DD_filtered_vcf.tar.gz --project-dir /path/to/project/dir --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
