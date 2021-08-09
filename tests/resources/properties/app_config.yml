@@ -9,6 +9,8 @@ jar:
   clustering_pipeline: {clustering_jar_file}
 
 submission:
+  assembly_report: {assembly_report_url}
+  assembly_fasta: {fasta_file}
   accessioning_properties_file: {accessioning_properties_file}
   clustering_properties_file: {clustering_properties_file}
   concat_chunk_size: 100

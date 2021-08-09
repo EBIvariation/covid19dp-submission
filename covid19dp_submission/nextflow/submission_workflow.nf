@@ -39,11 +39,36 @@ process validate_vcfs {
     """
 }
 
+process asm_check_vcfs {
+    Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
+
+    input:
+    val flag from download_snapshot_success
+    val vcf_file from vcf_file_list
+
+    output:
+    val true into asm_check_vcfs_success
+
+    script:
+    """
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
+        -m steps.run_asm_checker \
+        --vcf-file $params.submission.download_target_dir/$vcf_file \
+        --assembly-checker-binary $params.executable.vcf_assembly_checker \
+        --assembly-report $params.submission.assembly_report \
+        --assembly-fasta $params.submission.assembly_fasta \
+        --output-dir $params.submission.validation_dir \
+    ) >> $params.submission.log_dir/asm_check_vcfs.log 2>&1
+    """
+}
+
 process bgzip_and_index {
     Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
     
     input:
-    val flag from validate_vcfs_success.collect()
+    val flag1 from validate_vcfs_success.collect()
+    val flag2 from asm_check_vcfs_success.collect()
     val vcf_file from vcf_file_list
     
     output:
