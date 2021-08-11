@@ -1,0 +1,18 @@
+executable:
+  nextflow: /path/to/nextflow
+  vcf_assembly_checker: /path/to/vcf_assembly_checker
+  vcf_validator: /path/to/vcf_validator
+  bcftools: /path/to/bcftools
+
+jar:
+  accession_pipeline: /path/to/eva-accession-pipeline.jar
+  clustering_pipeline: /path/to/eva-accession-clustering.jar
+
+submission:
+  assembly_report: /path/to/assembly/report.txt
+  assembly_fasta: /path/to/assembly/fasta.fa
+  accessioning_properties_file: /path/to/accessioning.properties
+  clustering_properties_file: /path/to/clustering.properties
+  concat_chunk_size: 100
+  public_ftp_dir: /path/to/ftp/project/dir
+  accessioning_instance: instance-10
