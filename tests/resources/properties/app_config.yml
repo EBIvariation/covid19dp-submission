@@ -7,12 +7,15 @@ executable:
 jar:
   accession_pipeline: {accession_jar_file}
   clustering_pipeline: {clustering_jar_file}
+  release_pipeline: {release_jar_file}
 
 submission:
   assembly_report: {assembly_report_url}
   assembly_fasta: {fasta_file}
   accessioning_properties_file: {accessioning_properties_file}
   clustering_properties_file: {clustering_properties_file}
+  release_properties_file: {release_properties_file}
+  memory_for_incremental_release_in_gb: 4
   concat_chunk_size: 100
   public_ftp_dir: {download_folder}/ftp
   accessioning_instance: instance-10
