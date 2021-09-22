@@ -165,3 +165,24 @@ process cluster_assembly {
     )  >> $params.submission.log_dir/cluster_assembly.log 2>&1
     """
 }
+
+process incremental_release {
+
+    input:
+    val flag from cluster_assembly_success
+
+    output:
+    val true into incremental_release_success
+
+    // Due to the particularly memory-intensive nature of the incremental release process (owing to in-memory joins),
+    // ensure that this number is at least 32 in real-world scenarios
+    memory "${params.submission.memory_for_incremental_release_in_gb}" + " GB"
+
+    script:
+    """
+    (java -Xmx${params.submission.memory_for_incremental_release_in_gb}g -jar $params.jar.release_pipeline \
+    --spring.config.location=$params.submission.release_properties_file \
+    --parameters.accessionedVcf="${params.submission.accession_output_file}.gz"
+    )  >> $params.submission.log_dir/incremental_release.log 2>&1
+    """
+}

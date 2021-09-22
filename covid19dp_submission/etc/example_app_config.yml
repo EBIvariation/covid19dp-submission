@@ -7,12 +7,15 @@ executable:
 jar:
   accession_pipeline: /path/to/eva-accession-pipeline.jar
   clustering_pipeline: /path/to/eva-accession-clustering.jar
+  release_pipeline: /path/to/eva-accession-release.jar
 
 submission:
   assembly_report: /path/to/assembly/report.txt
   assembly_fasta: /path/to/assembly/fasta.fa
   accessioning_properties_file: /path/to/accessioning.properties
   clustering_properties_file: /path/to/clustering.properties
+  release_properties_file: /path/to/release.properties
+  memory_for_incremental_release_in_gb: 4
   concat_chunk_size: 100
   public_ftp_dir: /path/to/ftp/project/dir
   accessioning_instance: instance-10

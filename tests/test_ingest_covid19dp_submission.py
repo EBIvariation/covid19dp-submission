@@ -32,13 +32,17 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.accessioning_database_name = "eva_accession"
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
+        self.release_properties_file = os.path.join(self.processing_folder, 'release.properties')
         self.app_config_file = os.path.join(self.processing_folder, 'app_config.yml')
         accessioning_properties = open(os.path.join(self.resources_folder, 'properties', 'accessioning.properties'))\
             .read().format(**self.__dict__)
         clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
             .read().format(**self.__dict__)
+        release_properties = open(os.path.join(self.resources_folder, 'properties', 'release.properties')) \
+            .read().format(**self.__dict__)
         open(self.accessioning_properties_file, "w").write(accessioning_properties)
         open(self.clustering_properties_file, "w").write(clustering_properties)
+        open(self.release_properties_file, "w").write(release_properties)
 
     def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",
@@ -50,9 +54,12 @@ class TestIngestCovid19DPSubmission(TestCase):
                                 f'{self.processing_folder} '
                                 f'&& cp eva-accession-clustering/target/*.jar '
                                 f'{self.processing_folder} '
+                                f'&& cp eva-accession-release/target/*.jar '
+                                f'{self.processing_folder} '
                                 f'&& cd {self.processing_folder} && rm -rf eva-accession"')
         self.accession_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-pipeline*.jar")[0]
         self.clustering_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-clustering*.jar")[0]
+        self.release_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-release*.jar")[0]
 
         self.app_config = yaml.safe_load(open(os.path.join(self.resources_folder, 'properties', 'app_config.yml'))
                                          .read().format(**self.__dict__))
@@ -75,3 +82,6 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.assertEqual(54, num_clustered_variants)
         # check if files are synchronized to the ftp dir
         self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
+        num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
+            .count_documents(filter={})
+        self.assertEqual(54, num_incremental_release_records)
