@@ -52,7 +52,6 @@ deploy-python-tool-development:
 
 deploy-python-tool-production:
   extends: .deploy-python-tool
-  when: manual
   variables:
     ENVIRONMENT_NAME: production
     DEPLOY_POINT: $CI_COMMIT_TAG
