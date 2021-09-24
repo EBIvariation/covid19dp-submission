@@ -25,5 +25,5 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3'
     ],
-    scripts=glob.glob(join(base_dir, '*.py'))
+    scripts=glob.glob(join(base_dir, 'bin', '*.py'))
 )
