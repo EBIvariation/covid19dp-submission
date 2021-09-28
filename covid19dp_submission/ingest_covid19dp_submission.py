@@ -99,27 +99,3 @@ def ingest_covid19dp_submission(download_url: str, snapshot_name: str or None,  
     run_nextflow_command += f" --PYTHONPATH {config['executable']['python']['script_path']}"
     run_nextflow_command += f" -params-file {config['executable']['nextflow_param_file']}"
     run_command_with_output(f"Running submission pipeline: {nextflow_file_to_run}...", run_nextflow_command)
-
-
-def main():
-    parser = argparse.ArgumentParser(description='Ingest a snapshot submission from the Covid-19 data portal project',
-                                     formatter_class=argparse.RawTextHelpFormatter, add_help=False)
-    parser.add_argument("--download-url",
-                        help="URL to the data snapshot (ex: http://path/to/snapshots/YYYY_MM_DD.tar.gz)", required=True)
-    parser.add_argument("--snapshot-name", help="Snapshot name (ex: 2021_06_28_filtered_vcf)", default=None,
-                        required=False)
-    parser.add_argument("--project-dir", help="Project directory (ex: /path/to/PRJ)", default=None, required=True)
-    parser.add_argument("--app-config-file",
-                        help="Full path to the application config file (ex: /path/to/config.yml)", required=True)
-    parser.add_argument("--nextflow-config-file",
-                        help="Full path to the Nextflow config file", default=None, required=False)
-    parser.add_argument("--resume",
-                        help="Indicate if a previous concatenation job is to be resumed", action='store_true',
-                        required=False)
-    args = parser.parse_args()
-    ingest_covid19dp_submission(args.download_url, args.snapshot_name, args.project_dir, args.app_config_file,
-                                args.nextflow_config_file, args.resume)
-
-
-if __name__ == "__main__":
-    main()
