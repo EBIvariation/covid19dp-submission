@@ -18,4 +18,5 @@ submission:
   memory_for_incremental_release_in_gb: 4
   concat_chunk_size: 100
   public_ftp_dir: {download_folder}/ftp
-  accessioning_instance: instance-10
+  accessioning_instance: instance-1
+  clustering_instance: instance-6
