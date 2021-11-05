@@ -31,8 +31,7 @@ jobs:
         image: mongo:${{ matrix.mongo-version }}
         ports:
           - 27017:27017
-        options:
-          - enableMajorityReadConcern:enableMajorityReadConcern
+        options: --enableMajorityReadConcern
     steps:
     - uses: actions/checkout@v2
     - name: Setup Java JDK # Nextflow relies on JDK
