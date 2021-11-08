@@ -10,8 +10,8 @@ version = open(join(base_dir, 'covid19dp_submission', 'VERSION')).read().strip()
 
 setup(
     name='covid19dp_submission',
-    packages=['covid19dp_submission'],
-    package_data={'covid19dp_submission': ['VERSION']},
+    packages=['covid19dp_submission', 'covid19dp_submission.steps', 'covid19dp_submission.steps.vcf_vertical_concat'],
+    package_data={'covid19dp_submission': ['VERSION', 'etc/*', 'nextflow/*']},
     version=version,
     license='Apache',
     description='EBI EVA - Covid19 Data portal submission processing tools',
