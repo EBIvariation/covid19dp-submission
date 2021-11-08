@@ -147,6 +147,8 @@ process sync_accessions_to_public_ftp {
 }
 
 process cluster_assembly {
+    clusterOptions "-g /accession/$params.submission.clustering_instance"
+
     input:
     val flag from accession_vcf_success
     
@@ -161,7 +163,7 @@ process cluster_assembly {
         -m steps.cluster_assembly \
         --clustering-jar-file $params.jar.clustering_pipeline \
         --clustering-properties-file $params.submission.clustering_properties_file \
-        --accessioning-instance $params.submission.accessioning_instance \
+        --accessioning-instance $params.submission.clustering_instance \
     )  >> $params.submission.log_dir/cluster_assembly.log 2>&1
     """
 }
