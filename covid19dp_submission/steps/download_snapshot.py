@@ -38,8 +38,9 @@ def download_snapshot(download_url: str, snapshot_name: str or None, download_ta
 
     # Use strip-components switch to avoid extracting with the directory structure
     # since we have already created the requisite directory and passed it to download_target_dir
-    snapshot_download_command = f'bash -c "cd {download_target_dir} && curl -O {download_url} && ' \
-                                f'tar xzf {download_file_name} --strip-components=1 && rm -rf {download_file_name}"'
+    snapshot_download_command = (f'bash -c "cd {download_target_dir} && curl -O {download_url} && '
+                                 f'''tar xzf {download_file_name}  --transform='s/.*\///' && '''
+                                 f'rm -rf {download_file_name}"')
     run_command_with_output(f"Downloading data snapshot {snapshot_name}...", snapshot_download_command)
     return download_target_dir
 
