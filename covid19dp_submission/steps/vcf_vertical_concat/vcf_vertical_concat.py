@@ -29,6 +29,9 @@
 import argparse
 import os
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
+from ebi_eva_common_pyutils.logger import logging_config
+
+logger = logging_config.get_logger(__name__)
 
 
 class VerticalConcatProcess:
@@ -70,6 +73,7 @@ def main():
     parser.add_argument("--bcftools-binary",
                         help="Full path to the binary for bcftools", default="bcftools", required=False)
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     vcf_vertical_concat(args.files_to_concat_list, args.concat_processing_dir, args.output_vcf_file,
                         args.bcftools_binary)
 

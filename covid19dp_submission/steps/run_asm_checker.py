@@ -20,7 +20,6 @@ from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
 def should_skip_asm_check(vcf_file: str) -> bool:
@@ -59,6 +58,7 @@ def main():
     parser.add_argument("--output-dir", help="Full path to the assembly check output directory", required=True)
 
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     run_asm_checker(args.vcf_file, args.assembly_checker_binary, args.assembly_report, args.assembly_fasta,
                     args.output_dir)
 

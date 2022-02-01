@@ -18,7 +18,6 @@ from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
 def cluster_assembly(clustering_jar_file: str, clustering_properties_file: str, accessioning_instance: str,
@@ -43,6 +42,7 @@ def main():
                         required=True)
     parser.add_argument("--memory", help="Memory allocation (in GB)", type=int, default=16, required=False)
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     cluster_assembly(args.clustering_jar_file, args.clustering_properties_file, args.accessioning_instance, args.memory)
 
 
