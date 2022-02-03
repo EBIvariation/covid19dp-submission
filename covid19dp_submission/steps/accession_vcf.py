@@ -46,7 +46,7 @@ def accession_vcf(input_vcf_file: str, accessioning_jar_file: str, accessioning_
     run_command_with_output(f"Running accession for file: {input_vcf_file}...", accession_command)
     compressed_output_vcf_file = bgzip_and_index(output_vcf_file, bcftools_binary)
     if not is_input_same_as_output_vcfs(input_vcf_file, compressed_output_vcf_file):
-        logger.warning(f"FAIL: Number of accessioned variants in {compressed_output_vcf_file} "
+        logger.warning(f"Number of accessioned variants in {compressed_output_vcf_file} "
                        f"does not equal number of variants in the input file {input_vcf_file}.")
     logger.info(f"Accessioned file is in: {compressed_output_vcf_file}")
     return compressed_output_vcf_file
