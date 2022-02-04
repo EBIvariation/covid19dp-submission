@@ -19,7 +19,6 @@ from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
 def _get_vcf_filename_without_extension(vcf_file_name: str) -> str:
@@ -47,6 +46,8 @@ def main():
     parser.add_argument("--bcftools-binary", help="Full path to the bcftools binary (ex: /path/to/bcftools)",
                         default="bcftools", required=False)
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
+
     bgzip_and_index(args.vcf_file, args.bcftools_binary)
 
 

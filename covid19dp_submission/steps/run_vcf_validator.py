@@ -20,7 +20,6 @@ from ebi_eva_common_pyutils.logger import logging_config
 from subprocess import CalledProcessError
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
 def run_vcf_validation(vcf_file: str, validator_binary: str, output_dir: str) -> None:
@@ -67,6 +66,7 @@ def main():
     parser.add_argument("--output-dir", help="Full path to the validation output directory", required=True)
 
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     run_vcf_validation(args.vcf_file, args.validator_binary, args.output_dir)
 
 

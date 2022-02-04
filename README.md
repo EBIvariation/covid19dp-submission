@@ -2,10 +2,22 @@
 
 This repository contains automation scripts to process submissions from the Covid-19 data portal project: https://www.covid19dataportal.org/
 
+## Installation
+
+Retrieve the latest version
+```
+pip git+install https://github.com/EBIvariation/covid19dp-submission.git@master
+```
+
+Retrieve a tagged version
+```
+pip git+install https://github.com/EBIvariation/covid19dp-submission.git@v0.1.2
+```
+
 ## Usage
 
 ``` 
-python3 -m covid19dp_submission.ingest_covid19dp_submission --download-url http://path/to/covid19dp/snapshot/YYYY_MM_DD_filtered_vcf.tar.gz --project-dir /path/to/project/dir --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
+ingest_covid19dp_submission.py --download-url http://path/to/covid19dp/snapshot/YYYY_MM_DD_filtered_vcf.tar.gz --project-dir /path/to/project/dir --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
 ```
 
 See [application configuration](covid19dp_submission/etc/example_app_config.yml) and [nextflow configuration](covid19dp_submission/etc/example_nextflow.config) examples. 

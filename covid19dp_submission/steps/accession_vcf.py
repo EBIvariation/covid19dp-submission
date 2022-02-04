@@ -20,10 +20,9 @@ from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
-def compare_input_output_vcfs(input_vcf_file: str, output_vcf_file: str) -> bool:
+def is_input_same_as_output_vcfs(input_vcf_file: str, output_vcf_file: str) -> bool:
     """
     Ensure that the accessioned VCF file and the input VCF files have the same number of records
     """
@@ -46,9 +45,9 @@ def accession_vcf(input_vcf_file: str, accessioning_jar_file: str, accessioning_
                         f"--accessioning.instanceId={accessioning_instance}"
     run_command_with_output(f"Running accession for file: {input_vcf_file}...", accession_command)
     compressed_output_vcf_file = bgzip_and_index(output_vcf_file, bcftools_binary)
-    assert compare_input_output_vcfs(input_vcf_file, compressed_output_vcf_file), \
-        f"FAIL: Number of accessioned variants in {compressed_output_vcf_file} " \
-        f"does not equal number of variants in the input file {input_vcf_file}."
+    if not is_input_same_as_output_vcfs(input_vcf_file, compressed_output_vcf_file):
+        logger.warning(f"Number of accessioned variants in {compressed_output_vcf_file} "
+                       f"does not equal number of variants in the input file {input_vcf_file}.")
     logger.info(f"Accessioned file is in: {compressed_output_vcf_file}")
     return compressed_output_vcf_file
 
@@ -72,6 +71,7 @@ def main():
                         default="bcftools", required=False)
     parser.add_argument("--memory", help="Memory allocation (in GB)", type=int, default=16, required=False)
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     accession_vcf(args.vcf_file, args.accessioning_jar_file, args.accessioning_properties_file,
                   args.accessioning_instance, args.output_vcf_file, args.bcftools_binary, args.memory)
 

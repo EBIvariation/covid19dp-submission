@@ -22,7 +22,6 @@ from retry import retry
 from subprocess import CalledProcessError
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
 @retry(exceptions=CalledProcessError, logger=logger, tries=4, delay=240, backoff=1.2, jitter=(1, 3))
@@ -55,6 +54,7 @@ def main():
     parser.add_argument("--download-target-dir", help="Full path to the target download directory", required=True)
 
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     download_snapshot(args.download_url, args.snapshot_name, args.download_target_dir)
 
 

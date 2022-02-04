@@ -25,7 +25,6 @@ from ebi_eva_common_pyutils.logger import logging_config
 from ebi_eva_common_pyutils.nextflow import NextFlowPipeline, NextFlowProcess
 
 logger = logging_config.get_logger(__name__)
-logging_config.add_stdout_handler()
 
 
 def get_python_process_command_string(python_program, args: dict, log_file: str):
@@ -193,6 +192,7 @@ def main():
                         help="Indicate if a previous concatenation job is to be resumed", action='store_true',
                         required=False)
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
     run_vcf_vertical_concat_pipeline(args.toplevel_vcf_dir, args.concat_processing_dir, args.concat_chunk_size,
                                      args.bcftools_binary, args.nextflow_binary, args.nextflow_config_file, args.resume)
 
