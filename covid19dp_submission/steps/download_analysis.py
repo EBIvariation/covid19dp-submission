@@ -17,6 +17,7 @@ import urllib
 
 import requests
 from ebi_eva_common_pyutils.logger import logging_config
+from retry import retry
 
 logger = logging_config.get_logger(__name__)
 
@@ -30,7 +31,7 @@ def download_analysis(project, num_analysis, processed_analysis_file, download_t
 
     download_files(analysis_array, download_target_dir, processed_analysis_file)
 
-
+@retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
 def total_analysis_in_project(project):
     count_url = f"https://www.ebi.ac.uk/ena/portal/api/filereportcount?accession={project}&result=analysis"
     response = requests.get(count_url)
@@ -59,7 +60,7 @@ def get_analysis_to_process(project, num_analysis, total_analysis, processed_ana
 
     return analysis_for_processing
 
-
+@retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
 def get_analysis_from_ena(project, offset, limit):
     analysis_url = f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}&offset={offset}" \
                    f"&limit={limit}&format=json&fields=run_ref,analysis_accession,submitted_ftp"
@@ -96,10 +97,15 @@ def download_files(analysis_array, download_target_dir, processed_analysis_file)
             download_file_path = f"{download_target_dir}/{download_file_name}"
 
             logger.info(f"downloading file {download_url}")
-            urllib.request.urlretrieve(download_url, download_file_path)
+            download_file(download_url, download_file_path)
 
             logger.info(f"downloaded file {download_file_name}")
             f.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
+
+
+@retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
+def download_file(download_url, download_file_path):
+    urllib.request.urlretrieve(download_url, download_file_path)
 
 
 def main():
@@ -109,9 +115,8 @@ def main():
                         help="project from which analysis needs to be downloaded")
     parser.add_argument("--num-analysis", type=int, default=10000, required=False,
                         help="Number of analysis to download (max = 10000)")
-    parser.add_argument("--processed-analysis-file",
-                        default="/nfs/production3/eva/data/PRJEB45554/covid19_analysis.txt",
-                        required=False, help="full path to the file containing all the processed analysis")
+    parser.add_argument("--processed-analysis-file", required=True,
+                        help="full path to the file containing all the processed analysis")
     parser.add_argument("--download-target-dir", required=True, help="Full path to the target download directory")
 
     args = parser.parse_args()
