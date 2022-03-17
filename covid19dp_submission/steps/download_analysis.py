@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import os
 import urllib
 
 import requests
@@ -29,7 +30,9 @@ def download_analyses(project, num_analyses, processed_analyses_file, download_t
     analyses_array = get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file)
     logger.info(f"number of analyses to process: {len(analyses_array)}")
 
+    os.makedirs(download_target_dir, exist_ok=True)
     download_files(analyses_array, download_target_dir, processed_analyses_file)
+
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
 def total_analyses_in_project(project):
@@ -50,7 +53,8 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
         logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
         analyses_from_ena = get_analyses_from_ena(project, offset, limit)
         unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, processed_analyses)
-        logger.info(f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
+        logger.info(
+            f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
 
         if (len(analyses_for_processing) + len(unprocessed_analyses)) >= num_analyses:
             analyses_for_processing = analyses_for_processing + \
@@ -63,6 +67,7 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
             offset = offset + limit
 
     return analyses_for_processing
+
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
 def get_analyses_from_ena(project, offset, limit):
@@ -104,7 +109,7 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
             download_file(download_url, download_file_path)
 
             logger.info(f"downloaded file {download_file_name}")
-            f.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
+            f.write(f"\n{analysis['analysis_accession']},{analysis['submitted_ftp']}")
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
