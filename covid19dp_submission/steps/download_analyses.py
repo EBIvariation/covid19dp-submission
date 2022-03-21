@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import glob
 import os
 import urllib
 
@@ -32,6 +33,17 @@ def download_analyses(project, num_analyses, processed_analyses_file, download_t
 
     os.makedirs(download_target_dir, exist_ok=True)
     download_files(analyses_array, download_target_dir, processed_analyses_file)
+
+    vcf_files_downloaded = glob.glob(f"{download_target_dir}/*.vcf")
+    logger.info(f"total number of files downloaded: {len(vcf_files_downloaded)}")
+
+    if len(analyses_array) != len(vcf_files_downloaded):
+        raise logger.warn(f"Not all analyses were downloaded. Num of Analyses to download={len(analyses_array)},"
+                          f"Num of Actual Analyses downloaded = {len(vcf_files_downloaded)}, "
+                          f"Analyses to download = {analyses_array}"
+                          f"Downloaded Analyses = {[os.path.basename(x) for x in vcf_files_downloaded]}")
+
+    return download_target_dir
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
@@ -104,12 +116,15 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
             download_url = f"http://{analysis['submitted_ftp']}"
             download_file_name = f"{analysis['analysis_accession']}.vcf"
             download_file_path = f"{download_target_dir}/{download_file_name}"
-
-            logger.info(f"downloading file {download_url}")
-            download_file(download_url, download_file_path)
-
-            logger.info(f"downloaded file {download_file_name}")
-            f.write(f"\n{analysis['analysis_accession']},{analysis['submitted_ftp']}")
+            try:
+                logger.info(f"downloading file {download_url}")
+                download_file(download_url, download_file_path)
+                logger.info(f"downloaded file {download_file_name}")
+                f.write(f"\n{analysis['analysis_accession']},{analysis['submitted_ftp']}")
+            except:
+                logger.warning(f"Could not download file : {download_file_path}")
+                if os.path.exists(download_file_path):
+                    os.remove(download_file_path)
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))

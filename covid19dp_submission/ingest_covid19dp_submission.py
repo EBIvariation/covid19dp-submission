@@ -12,28 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import inspect
 import os
 import sys
-import tarfile
-import urllib.request
-
-import yaml
-
-from covid19dp_submission import NEXTFLOW_DIR
-from .steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
-from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
+from datetime import datetime
 from typing import List
 
+import yaml
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
 
-def get_submission_snapshot_file_list(download_url: str) -> List[str]:
-    ftp_stream = urllib.request.urlopen(download_url)
-    tar_file_handle = tarfile.open(fileobj=ftp_stream, mode="r|gz")
-    return sorted([os.path.basename(member.name) for member in tar_file_handle.getmembers()
-                   if member.name.lower().endswith(".vcf.gz")])
+from covid19dp_submission import NEXTFLOW_DIR
+from covid19dp_submission.steps.download_analyses import download_analyses
+from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
 
+
+def get_analyses_file_list(download_target_dir: str) -> List[str]:
+    return sorted([os.path.basename(member.name) for member in os.listdir(download_target_dir)
+                   if member.name.lower().endswith(".vcf")])
 
 def _create_required_dirs(config: dict):
     required_dirs = [config['submission']['download_target_dir'], config['submission']['concat_processing_dir'],
@@ -43,14 +39,13 @@ def _create_required_dirs(config: dict):
         os.makedirs(dir_name, exist_ok=True)
 
 
-def _create_download_file_list(config: dict):
-    download_file_list = get_submission_snapshot_file_list(config['submission']['download_url'])
+def create_download_file_list(config: dict):
+    download_file_list = get_analyses_file_list(config['submission']['download_target_dir'])
     open(config['submission']['download_file_list'], "w").write('\n'.join(download_file_list))
     return download_file_list
 
 
-def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflow_config_file: str,
-                app_config_file: str) -> dict:
+def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str, app_config_file: str) -> dict:
     config = get_args_from_private_config_file(app_config_file)
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
@@ -62,7 +57,7 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
     accession_output_dir = os.path.join(project_dir, '60_eva_public', snapshot_name)
 
     config['submission'].update(
-               {'download_url': download_url, 'snapshot_name': snapshot_name,
+               {'snapshot_name': snapshot_name,
                 'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
                 # Directory to process vertical concatenation of submitted VCF files
                 'concat_processing_dir': concat_processing_dir,
@@ -78,14 +73,22 @@ def _get_config(download_url: str, snapshot_name: str, project_dir: str, nextflo
     return config
 
 
-def ingest_covid19dp_submission(download_url: str, snapshot_name: str or None,  project_dir: str,
-                                app_config_file: str, nextflow_config_file: str or None, resume: bool):
-    snapshot_name = snapshot_name if snapshot_name else os.path.basename(download_url).replace(".tar.gz", "")
-    config = _get_config(download_url, snapshot_name, project_dir, nextflow_config_file, app_config_file)
+def ingest_covid19dp_submission(project: str or None, snapshot_name: str or None, project_dir: str, num_analyses: int,
+                                processed_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
+                                resume: bool):
+    process_new_snapshot = False
+    if snapshot_name is None:
+        snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        process_new_snapshot = True
+
+    config = _get_config(snapshot_name, project, project_dir, num_analyses, processed_analyses_file,
+                         nextflow_config_file, app_config_file)
     _create_required_dirs(config)
-    # Compute the file path where the output of multi-stage vertical concatenation will reside
-    # based on the number of files to be processed
-    vcf_files_to_be_downloaded = _create_download_file_list(config)
+
+    if process_new_snapshot:
+        download_analyses(project, num_analyses, processed_analyses_file, config['submission']['download_target_dir'])
+
+    vcf_files_to_be_downloaded = create_download_file_list(config)
     config['submission']['concat_result_file'] = \
         get_concat_result_file_name(config['submission']['concat_processing_dir'], len(vcf_files_to_be_downloaded),
                                     config['submission']['concat_chunk_size'])

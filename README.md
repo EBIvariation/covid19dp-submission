@@ -17,14 +17,14 @@ pip git+install https://github.com/EBIvariation/covid19dp-submission.git@v0.1.2
 ## Usage
 
 ``` 
-ingest_covid19dp_submission.py --download-url http://path/to/covid19dp/snapshot/YYYY_MM_DD_filtered_vcf.tar.gz --project-dir /path/to/project/dir --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
+ingest_covid19dp_submission.py --project-dir /path/to/project/dir --num-analyses number/of/analysis/to/download --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
 ```
 
 See [application configuration](covid19dp_submission/etc/example_app_config.yml) and [nextflow configuration](covid19dp_submission/etc/example_nextflow.config) examples. 
 
 The above command will run the following steps (see [workflow definition](covid19dp_submission/nextflow/submission_workflow.nf)):
 
-* [Download the snapshot](covid19dp_submission/steps/download_snapshot.py) from the URL provided for a given Covid-19 DP snapshot.
+* [Download analyses files](covid19dp_submission/steps/download_analyses.py) using ENA rest-services.
 * Run [VCF validation](covid19dp_submission/steps/run_vcf_validator.py) on all the downloaded VCF files.
 * Run [bgzip compression and indexing](covid19dp_submission/steps/bgzip_and_index_vcf.py) on the VCF files. 
 * Run [multi-stage vertical concatenation](covid19dp_submission/steps/vcf_vertical_concat/run_vcf_vertical_concat_pipeline.py) to combine the VCF files.

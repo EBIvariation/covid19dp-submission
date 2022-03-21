@@ -4,7 +4,7 @@ import shutil
 from unittest import TestCase
 
 from covid19dp_submission import ROOT_DIR
-from covid19dp_submission.steps.download_analysis import download_analyses
+from covid19dp_submission.steps.download_analyses import download_analyses
 
 
 class TestDownloadSnapshot(TestCase):

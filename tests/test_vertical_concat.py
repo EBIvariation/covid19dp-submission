@@ -1,14 +1,14 @@
 import glob
 import os
 import shutil
+from unittest import TestCase
 
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+
+from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.steps.bgzip_and_index_vcf import bgzip_and_index
-from covid19dp_submission.steps.download_snapshot import download_snapshot
 from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline \
     import run_vcf_vertical_concat_pipeline, get_output_vcf_file_name
-from covid19dp_submission import ROOT_DIR
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
-from unittest import TestCase
 
 
 class TestVCFVerticalConcat(TestCase):
@@ -26,10 +26,17 @@ class TestVCFVerticalConcat(TestCase):
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_dir, ignore_errors=True)
 
+    def download_test_files(self):
+        download_file_name = os.path.basename(self.download_url)
+        snapshot_download_command = (f'bash -c "cd {self.download_target_dir} && curl -O {self.download_url} && '
+                                     f'''tar xzf {download_file_name}  --transform='s/.*\///' && '''
+                                     f'rm -rf {download_file_name}"')
+        run_command_with_output(f"Downloading data for testing", snapshot_download_command)
+        return self.download_target_dir
+
     # Tests require nextflow and bcftools installed locally and in PATH
     def test_concat_uninterrupted(self):
-        download_target_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                                download_target_dir=self.download_target_dir)
+        download_target_dir = self.download_test_files()
         for vcf_file in glob.glob(f"{download_target_dir}/*.vcf.gz"):
             bgzip_and_index(vcf_file, "bcftools")
         #   s0.vcf.gz   s1.vcf.gz   s2.vcf.gz   s3.vcf.gz   s4.vcf.gz

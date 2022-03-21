@@ -2,7 +2,7 @@ import glob
 import os
 import shutil
 
-from covid19dp_submission.steps.download_snapshot import download_snapshot
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from covid19dp_submission.steps.bgzip_and_index_vcf import bgzip_and_index
 from covid19dp_submission import ROOT_DIR
 from unittest import TestCase
@@ -20,9 +20,16 @@ class TestBGZipAndIndex(TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.download_folder, ignore_errors=True)
 
+    def download_test_files(self):
+        download_file_name = os.path.basename(self.download_url)
+        snapshot_download_command = (f'bash -c "cd {self.download_target_dir} && curl -O {self.download_url} && '
+                                     f'''tar xzf {download_file_name}  --transform='s/.*\///' && '''
+                                     f'rm -rf {download_file_name}"')
+        run_command_with_output(f"Downloading data for testing", snapshot_download_command)
+        return self.download_target_dir
+
     def test_bgzip_and_index(self):
-        download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                         download_target_dir=self.download_target_dir)
+        download_dir = self.download_test_files()
         vcf_files = glob.glob(f"{download_dir}/*.vcf.gz")
         bgzip_and_index(vcf_file=vcf_files[0], bcftools_binary="bcftools")
         self.assertTrue(os.path.exists(vcf_files[0]))

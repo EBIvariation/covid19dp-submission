@@ -5,7 +5,6 @@ import shutil
 
 from covid19dp_submission.steps.accession_vcf import accession_vcf
 from covid19dp_submission.steps.cluster_assembly import cluster_assembly
-from covid19dp_submission.steps.download_snapshot import download_snapshot
 from covid19dp_submission import ROOT_DIR
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from unittest import TestCase
@@ -61,9 +60,17 @@ class TestAccessionVcf(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
+
+    def download_test_files(self):
+        download_file_name = os.path.basename(self.download_url)
+        snapshot_download_command = (f'bash -c "cd {self.download_target_dir} && curl -O {self.download_url} && '
+                                     f'''tar xzf {download_file_name}  --transform='s/.*\///' && '''
+                                     f'rm -rf {download_file_name}"')
+        run_command_with_output(f"Downloading data for testing", snapshot_download_command)
+        return self.download_target_dir
+
     def test_accession_and_clustering(self):
-        download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                         download_target_dir=self.download_target_dir)
+        download_dir = self.download_test_files()
         vcf_file = f"{download_dir}/file1_test_snapshot.vcf.gz"
         output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
         accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
