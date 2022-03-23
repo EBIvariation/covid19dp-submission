@@ -28,8 +28,9 @@ from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipe
 
 
 def get_analyses_file_list(download_target_dir: str) -> List[str]:
-    return sorted([os.path.basename(member.name) for member in os.listdir(download_target_dir)
-                   if member.name.lower().endswith(".vcf")])
+    return sorted([os.path.basename(member) for member in os.listdir(download_target_dir)
+                   if member.lower().endswith(".vcf")])
+
 
 def _create_required_dirs(config: dict):
     required_dirs = [config['submission']['download_target_dir'], config['submission']['concat_processing_dir'],
@@ -57,23 +58,23 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
     accession_output_dir = os.path.join(project_dir, '60_eva_public', snapshot_name)
 
     config['submission'].update(
-               {'snapshot_name': snapshot_name,
-                'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
-                # Directory to process vertical concatenation of submitted VCF files
-                'concat_processing_dir': concat_processing_dir,
-                'accession_output_dir': accession_output_dir,
-                'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
-                'log_dir': log_dir, 'validation_dir': validation_dir
-                })
+        {'snapshot_name': snapshot_name,
+         'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
+         # Directory to process vertical concatenation of submitted VCF files
+         'concat_processing_dir': concat_processing_dir,
+         'accession_output_dir': accession_output_dir,
+         'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
+         'log_dir': log_dir, 'validation_dir': validation_dir
+         })
     config['executable']['python'] = {'interpreter': sys.executable,
-                               'script_path': os.path.dirname(inspect.getmodule(sys.modules[__name__]).__file__)}
+                                      'script_path': os.path.dirname(inspect.getmodule(sys.modules[__name__]).__file__)}
     config['executable']['nextflow_config_file'] = nextflow_config_file
     config['executable']['nextflow_param_file'] = submission_param_file
 
     return config
 
 
-def ingest_covid19dp_submission(project: str or None, snapshot_name: str or None, project_dir: str, num_analyses: int,
+def ingest_covid19dp_submission(project: str, snapshot_name: str, project_dir: str, num_analyses: int,
                                 processed_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
                                 resume: bool):
     process_new_snapshot = False
@@ -81,8 +82,7 @@ def ingest_covid19dp_submission(project: str or None, snapshot_name: str or None
         snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         process_new_snapshot = True
 
-    config = _get_config(snapshot_name, project, project_dir, num_analyses, processed_analyses_file,
-                         nextflow_config_file, app_config_file)
+    config = _get_config(snapshot_name, project_dir, nextflow_config_file, app_config_file)
     _create_required_dirs(config)
 
     if process_new_snapshot:

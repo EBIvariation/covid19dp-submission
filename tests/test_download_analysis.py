@@ -23,7 +23,7 @@ class TestDownloadSnapshot(TestCase):
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
 
     def get_processed_files_data(self):
-        return ["RZ3372540,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372540/SRR15239121.vcf",
+        return ["ERZ3372540,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372540/SRR15239121.vcf",
                 "\nERZ3372549,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372549/ERR6259542.vcf",
                 "\nERZ3372550,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372550/ERR6259546.vcf",
                 "\nERZ3372551,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372551/ERR6259557.vcf",

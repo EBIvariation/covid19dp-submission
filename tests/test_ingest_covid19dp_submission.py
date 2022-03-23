@@ -16,8 +16,9 @@ class TestIngestCovid19DPSubmission(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
         self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
+        self.project = 'PRJEB45554'
+        self.snapshot_name = None
         self.num_of_analyses = 5
-        self.processed_analyses_file = os.path.join(self.resources_folder, 'processed_analyses_file.txt')
         self.assembly_report_url = os.path.join(self.resources_folder,
                                                 'GCA_009858895.3_ASM985889v3_assembly_report.txt')
         self.fasta_file = os.path.join(self.resources_folder, 'GCA_009858895.3_ASM985889v3_genomic.fna')
@@ -30,6 +31,8 @@ class TestIngestCovid19DPSubmission(TestCase):
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         os.makedirs(self.processing_folder)
+        self.processed_analyses_file = os.path.join(self.processing_folder, 'processed_analyses_file.txt')
+
 
         self.accessioning_database_name = "eva_accession"
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
@@ -45,6 +48,20 @@ class TestIngestCovid19DPSubmission(TestCase):
         open(self.accessioning_properties_file, "w").write(accessioning_properties)
         open(self.clustering_properties_file, "w").write(clustering_properties)
         open(self.release_properties_file, "w").write(release_properties)
+
+    def get_processed_files_data(self):
+        return ["ERZ3372540,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372540/SRR15239121.vcf",
+                "\nERZ3372549,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372549/ERR6259542.vcf",
+                "\nERZ3372550,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372550/ERR6259546.vcf",
+                "\nERZ3372551,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372551/ERR6259557.vcf",
+                "\nERZ3400189,ftp.sra.ebi.ac.uk/vol1/ERZ340/ERZ3400189/SRR15239121.vcf"
+                ]
+
+    def create_processed_analysis_file(self):
+        data = self.get_processed_files_data()
+        with open(self.processed_analyses_file, 'w+') as f:
+            for entry in data:
+                f.write(entry)
 
     def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",
@@ -67,6 +84,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                          .read().format(**self.__dict__))
         yaml.safe_dump(data=self.app_config, stream=open(self.app_config_file, "w"))
 
+        self.create_processed_analysis_file()
         self.mongo_db = pymongo.MongoClient()
         self.mongo_db.drop_database(self.accessioning_database_name)
 
@@ -76,7 +94,8 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.mongo_db.drop_database(self.accessioning_database_name)
 
     def test_ingest_covid19dp_submission(self):
-        ingest_covid19dp_submission(project_dir=self.processing_folder, num_analyses=self.num_of_analyses,
+        ingest_covid19dp_submission(project=self.project, snapshot_name=self.snapshot_name,
+                                    project_dir=self.processing_folder, num_analyses=self.num_of_analyses,
                                     processed_analyses_file=self.processed_analyses_file,
                                     app_config_file=self.app_config_file,
                                     nextflow_config_file=self.nextflow_config_file, resume=False)
