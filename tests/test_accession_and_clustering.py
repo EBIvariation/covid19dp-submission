@@ -21,8 +21,7 @@ class TestAccessionVcf(TestCase):
 
         self.download_folder = os.path.join(self.resources_folder, 'download_snapshot')
         self.download_target_dir = os.path.join(self.download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
-        self.download_url = "file:///" + os.path.join(self.resources_folder, 'vcf_files',
-                                                      '2021_07_23_test_snapshot.tar.gz')
+
         self.processing_folder = os.path.join(self.resources_folder, 'processing')
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
@@ -62,16 +61,13 @@ class TestAccessionVcf(TestCase):
 
 
     def download_test_files(self):
-        download_file_name = os.path.basename(self.download_url)
-        snapshot_download_command = (f'bash -c "cd {self.download_target_dir} && curl -O {self.download_url} && '
-                                     f'''tar xzf {download_file_name}  --transform='s/.*\///' && '''
-                                     f'rm -rf {download_file_name}"')
-        run_command_with_output(f"Downloading data for testing", snapshot_download_command)
+        os.makedirs(self.download_target_dir)
+        shutil.copy(os.path.join(self.resources_folder, 'vcf_files', 'file1.vcf'), self.download_target_dir)
         return self.download_target_dir
 
     def test_accession_and_clustering(self):
         download_dir = self.download_test_files()
-        vcf_file = f"{download_dir}/file1_test_snapshot.vcf.gz"
+        vcf_file = f"{download_dir}/file1.vcf"
         output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
         accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
                       accessioning_properties_file=self.accessioning_properties_file,

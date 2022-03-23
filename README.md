@@ -24,7 +24,7 @@ See [application configuration](covid19dp_submission/etc/example_app_config.yml)
 
 The above command will run the following steps (see [workflow definition](covid19dp_submission/nextflow/submission_workflow.nf)):
 
-* [Download analyses files](covid19dp_submission/steps/download_analyses.py) using ENA rest-services.
+* [Download analyses files](covid19dp_submission/download_analyses.py) using ENA rest-services.
 * Run [VCF validation](covid19dp_submission/steps/run_vcf_validator.py) on all the downloaded VCF files.
 * Run [bgzip compression and indexing](covid19dp_submission/steps/bgzip_and_index_vcf.py) on the VCF files. 
 * Run [multi-stage vertical concatenation](covid19dp_submission/steps/vcf_vertical_concat/run_vcf_vertical_concat_pipeline.py) to combine the VCF files.

@@ -17,20 +17,20 @@ class TestIngestCovid19DPSubmission(TestCase):
         super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
         self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
         self.project = 'PRJEB45554'
-        self.snapshot_name = None
-        self.num_of_analyses = 5
+        self.snapshot_name = '2021_07_23_test_snapshot'
+        self.num_of_analyses = 1
         self.assembly_report_url = os.path.join(self.resources_folder,
                                                 'GCA_009858895.3_ASM985889v3_assembly_report.txt')
         self.fasta_file = os.path.join(self.resources_folder, 'GCA_009858895.3_ASM985889v3_genomic.fna')
         self.nextflow_config_file = os.path.join(self.resources_folder, 'nf.config')
 
         self.download_folder = os.path.join(self.resources_folder, 'download_snapshot')
-        self.download_target_dir = os.path.join(self.download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
 
         self.processing_folder = os.path.join(self.resources_folder, 'processing')
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         os.makedirs(self.processing_folder)
+        self.download_target_dir = os.path.join(self.processing_folder, '30_eva_valid', self.snapshot_name)
         self.processed_analyses_file = os.path.join(self.processing_folder, 'processed_analyses_file.txt')
 
 
@@ -48,20 +48,6 @@ class TestIngestCovid19DPSubmission(TestCase):
         open(self.accessioning_properties_file, "w").write(accessioning_properties)
         open(self.clustering_properties_file, "w").write(clustering_properties)
         open(self.release_properties_file, "w").write(release_properties)
-
-    def get_processed_files_data(self):
-        return ["ERZ3372540,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372540/SRR15239121.vcf",
-                "\nERZ3372549,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372549/ERR6259542.vcf",
-                "\nERZ3372550,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372550/ERR6259546.vcf",
-                "\nERZ3372551,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372551/ERR6259557.vcf",
-                "\nERZ3400189,ftp.sra.ebi.ac.uk/vol1/ERZ340/ERZ3400189/SRR15239121.vcf"
-                ]
-
-    def create_processed_analysis_file(self):
-        data = self.get_processed_files_data()
-        with open(self.processed_analyses_file, 'w+') as f:
-            for entry in data:
-                f.write(entry)
 
     def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",
@@ -84,7 +70,6 @@ class TestIngestCovid19DPSubmission(TestCase):
                                          .read().format(**self.__dict__))
         yaml.safe_dump(data=self.app_config, stream=open(self.app_config_file, "w"))
 
-        self.create_processed_analysis_file()
         self.mongo_db = pymongo.MongoClient()
         self.mongo_db.drop_database(self.accessioning_database_name)
 
@@ -93,7 +78,15 @@ class TestIngestCovid19DPSubmission(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
+    def download_test_files(self):
+        os.makedirs(self.download_target_dir)
+        for i in range(1, 6):
+            shutil.copy(os.path.join(self.resources_folder, 'vcf_files', f'file{i}.vcf'), self.download_target_dir)
+        return self.download_target_dir
+
+
     def test_ingest_covid19dp_submission(self):
+        self.download_test_files()
         ingest_covid19dp_submission(project=self.project, snapshot_name=self.snapshot_name,
                                     project_dir=self.processing_folder, num_analyses=self.num_of_analyses,
                                     processed_analyses_file=self.processed_analyses_file,

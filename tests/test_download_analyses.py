@@ -4,7 +4,7 @@ import shutil
 from unittest import TestCase
 
 from covid19dp_submission import ROOT_DIR
-from covid19dp_submission.steps.download_analyses import download_analyses
+from covid19dp_submission.download_analyses import download_analyses
 
 
 class TestDownloadSnapshot(TestCase):
@@ -13,7 +13,7 @@ class TestDownloadSnapshot(TestCase):
     download_target_dir = os.path.join(toplevel_download_folder, '30_eva_valid')
     processed_analyses_file = os.path.join(toplevel_download_folder, 'processed_analyses_file.txt')
     project = 'PRJEB45554'
-    num_analyses_to_download = 5
+    num_analyses_to_download = 1
 
     def setUp(self) -> None:
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)

@@ -16,7 +16,6 @@ class TestVCFVerticalConcat(TestCase):
     download_folder = os.path.join(resources_folder, 'download_snapshot')
     download_target_dir = os.path.join(download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
     processing_dir = os.path.join(resources_folder, 'processing_dir')
-    download_url = "file:///" + os.path.join(resources_folder, 'vcf_files', '2021_07_23_test_snapshot.tar.gz')
 
     def setUp(self) -> None:
         shutil.rmtree(self.download_folder, ignore_errors=True)
@@ -27,17 +26,15 @@ class TestVCFVerticalConcat(TestCase):
         shutil.rmtree(self.processing_dir, ignore_errors=True)
 
     def download_test_files(self):
-        download_file_name = os.path.basename(self.download_url)
-        snapshot_download_command = (f'bash -c "cd {self.download_target_dir} && curl -O {self.download_url} && '
-                                     f'''tar xzf {download_file_name}  --transform='s/.*\///' && '''
-                                     f'rm -rf {download_file_name}"')
-        run_command_with_output(f"Downloading data for testing", snapshot_download_command)
+        os.makedirs(self.download_target_dir)
+        for i in range(1, 6):
+            shutil.copy(os.path.join(self.resources_folder, 'vcf_files', f'file{i}.vcf'), self.download_target_dir)
         return self.download_target_dir
 
     # Tests require nextflow and bcftools installed locally and in PATH
     def test_concat_uninterrupted(self):
         download_target_dir = self.download_test_files()
-        for vcf_file in glob.glob(f"{download_target_dir}/*.vcf.gz"):
+        for vcf_file in glob.glob(f"{download_target_dir}/*.vcf"):
             bgzip_and_index(vcf_file, "bcftools")
         #   s0.vcf.gz   s1.vcf.gz   s2.vcf.gz   s3.vcf.gz   s4.vcf.gz
         #       \           /           \           /
