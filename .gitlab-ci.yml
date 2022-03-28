@@ -7,7 +7,7 @@ variables:
 
 test:
   stage: test
-  image: python:3.8.7-slim-buster
+  image: python:3.8.7
   before_script:
     - python -m pip install --upgrade pip
     - pip install pytest certifi
