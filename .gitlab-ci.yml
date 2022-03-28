@@ -9,6 +9,13 @@ test:
   stage: test
   image: ubuntu:20.04
   before_script:
+    - apt-get update
+    - apt-get -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
+    - bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_validator_linux && chmod 755 vcf_validator_linux"
+    - bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_assembly_checker_linux && chmod 755 vcf_assembly_checker_linux"
+    - apt-get update
+    - apt-get upgrade -y
+    - apt-get install -y python3
     - python -m pip install --upgrade pip
     - pip install pytest certifi
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -17,10 +24,6 @@ test:
     # https://github.com/Ensembl/ensembl-rest/issues/427
     # See https://askubuntu.com/a/1233456
     - sed -i 's/DEFAULT@SECLEVEL=2/DEFAULT@SECLEVEL=1/' /usr/lib/ssl/openssl.cnf
-    - sudo apt update
-    - sudo apt -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
-    - sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_validator_linux && chmod 755 vcf_validator_linux"
-    - sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_assembly_checker_linux && chmod 755 vcf_assembly_checker_linux"
   script:
     - PYTHONPATH=. pytest tests
   environment:
