@@ -1,18 +1,18 @@
-import glob
-import os
-import unittest
-
-import pymongo
-import shutil
-import yaml
-
-from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
-from covid19dp_submission import ROOT_DIR
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
-from unittest import TestCase
-
-
-class TestIngestCovid19DPSubmission(TestCase):
+# import glob
+# import os
+# import unittest
+#
+# import pymongo
+# import shutil
+# import yaml
+#
+# from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
+# from covid19dp_submission import ROOT_DIR
+# from ebi_eva_common_pyutils.command_utils import run_command_with_output
+# from unittest import TestCase
+#
+#
+# class TestIngestCovid19DPSubmission(TestCase):
 
     # def __init__(self, *args, **kwargs):
     #     super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
@@ -74,17 +74,17 @@ class TestIngestCovid19DPSubmission(TestCase):
     #     shutil.rmtree(self.download_folder, ignore_errors=True)
     #     shutil.rmtree(self.processing_folder, ignore_errors=True)
     #     self.mongo_db.drop_database(self.accessioning_database_name)
-
-    @unittest.skip
-    def test_ingest_covid19dp_submission(self):
-        ingest_covid19dp_submission(download_url=self.download_url, snapshot_name=None,
-                                    project_dir=self.processing_folder, app_config_file=self.app_config_file,
-                                    nextflow_config_file=self.nextflow_config_file, resume=False)
-        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
-            .count_documents(filter={})
-        self.assertEqual(54, num_clustered_variants)
-        # check if files are synchronized to the ftp dir
-        self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
-        num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
-            .count_documents(filter={})
-        self.assertEqual(54, num_incremental_release_records)
+    #
+    # @unittest.skip
+    # def test_ingest_covid19dp_submission(self):
+    #     ingest_covid19dp_submission(download_url=self.download_url, snapshot_name=None,
+    #                                 project_dir=self.processing_folder, app_config_file=self.app_config_file,
+    #                                 nextflow_config_file=self.nextflow_config_file, resume=False)
+    #     num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
+    #         .count_documents(filter={})
+    #     self.assertEqual(54, num_clustered_variants)
+    #     # check if files are synchronized to the ftp dir
+    #     self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
+    #     num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
+    #         .count_documents(filter={})
+    #     self.assertEqual(54, num_incremental_release_records)

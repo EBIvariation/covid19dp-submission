@@ -1,19 +1,19 @@
-import glob
-import os
-import unittest
-
-import pymongo
-import shutil
-
-from covid19dp_submission.steps.accession_vcf import accession_vcf
-from covid19dp_submission.steps.cluster_assembly import cluster_assembly
-from covid19dp_submission.steps.download_snapshot import download_snapshot
-from covid19dp_submission import ROOT_DIR
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
-from unittest import TestCase
-
-
-class TestAccessionVcf(TestCase):
+# import glob
+# import os
+# import unittest
+#
+# import pymongo
+# import shutil
+#
+# from covid19dp_submission.steps.accession_vcf import accession_vcf
+# from covid19dp_submission.steps.cluster_assembly import cluster_assembly
+# from covid19dp_submission.steps.download_snapshot import download_snapshot
+# from covid19dp_submission import ROOT_DIR
+# from ebi_eva_common_pyutils.command_utils import run_command_with_output
+# from unittest import TestCase
+#
+#
+# class TestAccessionVcf(TestCase):
 
     # def __init__(self, *args, **kwargs):
     #     super(TestAccessionVcf, self).__init__(*args, **kwargs)
@@ -62,20 +62,20 @@ class TestAccessionVcf(TestCase):
     #     shutil.rmtree(self.download_folder, ignore_errors=True)
     #     shutil.rmtree(self.processing_folder, ignore_errors=True)
     #     self.mongo_db.drop_database(self.accessioning_database_name)
-
-    @unittest.skip
-    def test_accession_and_clustering(self):
-        download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                         download_target_dir=self.download_target_dir)
-        vcf_file = f"{download_dir}/file1_test_snapshot.vcf.gz"
-        output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
-        accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
-                      accessioning_properties_file=self.accessioning_properties_file,
-                      accessioning_instance="instance-10", output_vcf_file=output_vcf_file, bcftools_binary="bcftools",
-                      memory=8)
-        cluster_assembly(clustering_jar_file=self.clustering_jar_file,
-                         clustering_properties_file=self.clustering_properties_file,
-                         accessioning_instance="instance-10", memory=8)
-        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity']\
-            .count_documents(filter={})
-        self.assertEqual(15, num_clustered_variants)
+    #
+    # @unittest.skip
+    # def test_accession_and_clustering(self):
+    #     download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
+    #                                      download_target_dir=self.download_target_dir)
+    #     vcf_file = f"{download_dir}/file1_test_snapshot.vcf.gz"
+    #     output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
+    #     accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
+    #                   accessioning_properties_file=self.accessioning_properties_file,
+    #                   accessioning_instance="instance-10", output_vcf_file=output_vcf_file, bcftools_binary="bcftools",
+    #                   memory=8)
+    #     cluster_assembly(clustering_jar_file=self.clustering_jar_file,
+    #                      clustering_properties_file=self.clustering_properties_file,
+    #                      accessioning_instance="instance-10", memory=8)
+    #     num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity']\
+    #         .count_documents(filter={})
+    #     self.assertEqual(15, num_clustered_variants)
