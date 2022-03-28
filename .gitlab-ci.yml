@@ -19,6 +19,7 @@ test:
     - apt-get update
     - apt-get upgrade -y
     - apt-get install -y python3
+    - apt-get install -y python3-pip
     - python3 -m pip install --upgrade pip
     - pip install pytest certifi
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
