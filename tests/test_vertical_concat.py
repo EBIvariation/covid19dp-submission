@@ -1,6 +1,7 @@
 import glob
 import os
 import shutil
+import unittest
 
 from covid19dp_submission.steps.bgzip_and_index_vcf import bgzip_and_index
 from covid19dp_submission.steps.download_snapshot import download_snapshot
@@ -27,6 +28,7 @@ class TestVCFVerticalConcat(TestCase):
         shutil.rmtree(self.processing_dir, ignore_errors=True)
 
     # Tests require nextflow and bcftools installed locally and in PATH
+    @unittest.skip
     def test_concat_uninterrupted(self):
         download_target_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
                                                 download_target_dir=self.download_target_dir)

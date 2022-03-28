@@ -1,5 +1,7 @@
 import glob
 import os
+import unittest
+
 import pymongo
 import shutil
 
@@ -61,6 +63,7 @@ class TestAccessionVcf(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
+    @unittest.skip
     def test_accession_and_clustering(self):
         download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
                                          download_target_dir=self.download_target_dir)

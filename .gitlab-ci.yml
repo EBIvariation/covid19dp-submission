@@ -2,6 +2,9 @@ stages:
   - test
   - deploy
 
+variables:
+  VCF_VALIDATOR_VERSION: 0.9.4
+
 test:
   stage: test
   image: python:3.8.7-slim-buster
@@ -14,6 +17,10 @@ test:
     # https://github.com/Ensembl/ensembl-rest/issues/427
     # See https://askubuntu.com/a/1233456
     - sed -i 's/DEFAULT@SECLEVEL=2/DEFAULT@SECLEVEL=1/' /usr/lib/ssl/openssl.cnf
+    - sudo apt update
+    - sudo apt -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
+    - sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_validator_linux && chmod 755 vcf_validator_linux"
+    - sudo bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_assembly_checker_linux && chmod 755 vcf_assembly_checker_linux"
   script:
     - PYTHONPATH=. pytest tests
   environment:
@@ -22,6 +29,7 @@ test:
     - external_pull_requests
     - tags
     - master
+    - test_deployment
 
 
 # Not executed, parent job definition
@@ -50,7 +58,6 @@ deploy-python-tool-development:
   only:
     - external_pull_requests
     - master
-    - test_deployment
 
 deploy-python-tool-production:
   extends: .deploy-python-tool

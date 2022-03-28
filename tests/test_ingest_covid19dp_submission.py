@@ -1,5 +1,7 @@
 import glob
 import os
+import unittest
+
 import pymongo
 import shutil
 import yaml
@@ -73,6 +75,7 @@ class TestIngestCovid19DPSubmission(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
+    @unittest.skip
     def test_ingest_covid19dp_submission(self):
         ingest_covid19dp_submission(download_url=self.download_url, snapshot_name=None,
                                     project_dir=self.processing_folder, app_config_file=self.app_config_file,
