@@ -1,14 +1,13 @@
 import glob
 import os
-import shutil
-from unittest import TestCase
-
 import pymongo
+import shutil
 import yaml
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
 
-from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
+from covid19dp_submission import ROOT_DIR
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+from unittest import TestCase
 
 
 class TestIngestCovid19DPSubmission(TestCase):
@@ -35,9 +34,9 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
         self.release_properties_file = os.path.join(self.processing_folder, 'release.properties')
         self.app_config_file = os.path.join(self.processing_folder, 'app_config.yml')
-        accessioning_properties = open(os.path.join(self.resources_folder, 'properties', 'accessioning.properties')) \
+        accessioning_properties = open(os.path.join(self.resources_folder, 'properties', 'accessioning.properties'))\
             .read().format(**self.__dict__)
-        clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties')) \
+        clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
             .read().format(**self.__dict__)
         release_properties = open(os.path.join(self.resources_folder, 'properties', 'release.properties')) \
             .read().format(**self.__dict__)
@@ -83,6 +82,6 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.assertEqual(54, num_clustered_variants)
         # check if files are synchronized to the ftp dir
         self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
-        num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity'] \
+        num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
             .count_documents(filter={})
         self.assertEqual(54, num_incremental_release_records)

@@ -1,15 +1,14 @@
 import glob
 import os
 import shutil
-from unittest import TestCase
 
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
-
-from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.steps.bgzip_and_index_vcf import bgzip_and_index
 from covid19dp_submission.steps.download_snapshot import download_snapshot
 from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline \
     import run_vcf_vertical_concat_pipeline, get_output_vcf_file_name
+from covid19dp_submission import ROOT_DIR
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+from unittest import TestCase
 
 
 class TestVCFVerticalConcat(TestCase):

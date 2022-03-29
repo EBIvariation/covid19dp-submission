@@ -1,15 +1,14 @@
 import glob
 import os
-import shutil
-from unittest import TestCase
-
 import pymongo
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
+import shutil
 
-from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.steps.accession_vcf import accession_vcf
 from covid19dp_submission.steps.cluster_assembly import cluster_assembly
 from covid19dp_submission.steps.download_snapshot import download_snapshot
+from covid19dp_submission import ROOT_DIR
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+from unittest import TestCase
 
 
 class TestAccessionVcf(TestCase):
@@ -35,7 +34,7 @@ class TestAccessionVcf(TestCase):
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
         self.accessioning_properties = open(os.path.join(self.resources_folder, 'properties',
                                                          'accessioning.properties')).read().format(**self.__dict__)
-        self.clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties')) \
+        self.clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
             .read().format(**self.__dict__)
         open(self.accessioning_properties_file, "w").write(self.accessioning_properties)
         open(self.clustering_properties_file, "w").write(self.clustering_properties)
@@ -74,6 +73,6 @@ class TestAccessionVcf(TestCase):
         cluster_assembly(clustering_jar_file=self.clustering_jar_file,
                          clustering_properties_file=self.clustering_properties_file,
                          accessioning_instance="instance-10", memory=8)
-        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
+        num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity']\
             .count_documents(filter={})
         self.assertEqual(15, num_clustered_variants)
