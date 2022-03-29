@@ -12,8 +12,8 @@ test:
   stage: test
   image: ubuntu:20.04
   services:
-    - mongo: 4.0.21
-    - postgres: 9.6
+    - mongo:4.0.21
+    - postgres:9.6
   before_script:
     - apt-get update
     - apt-get upgrade -y
