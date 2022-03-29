@@ -20,6 +20,7 @@ test:
     - apt-get install -y tzdata
     - apt-get install -y wget
     - apt-get install -y curl
+    - apt-get install -y git
     - apt-get install -y openjdk-8-jdk
     - apt-get -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
     - bash -c "export JAVA_CMD="$(which java)" && cd /usr/bin && (curl -s https://get.nextflow.io | bash) && chmod 755 nextflow"
