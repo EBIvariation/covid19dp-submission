@@ -4,6 +4,9 @@ stages:
 
 variables:
   VCF_VALIDATOR_VERSION: 0.9.4
+  POSTGRES_DB: postgres
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
 
 test:
   stage: test
@@ -11,11 +14,6 @@ test:
   services:
     - mongo: 4.0.21
     - postgres: 9.6
-  variables:
-    POSTGRES_DB: postgres
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-
   before_script:
     - apt-get update
     - apt-get upgrade -y
