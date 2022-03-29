@@ -8,6 +8,14 @@ variables:
 test:
   stage: test
   image: ubuntu:20.04
+  services:
+    - mongo: 4.0.21
+    - postgres: 9.6
+  variables:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+
   before_script:
     - apt-get update
     - apt-get upgrade -y
