@@ -30,6 +30,8 @@ class TestAccessionVcf(TestCase):
         os.makedirs(self.processing_folder)
 
         self.accessioning_database_name = "eva_accession"
+        self.mongo_host = 'mongo'
+        self.postgres_host = 'postgres'
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accession_config.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
         self.accessioning_properties = open(os.path.join(self.resources_folder, 'properties',
@@ -53,7 +55,7 @@ class TestAccessionVcf(TestCase):
         self.accession_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-pipeline*.jar")[0]
         self.clustering_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-clustering*.jar")[0]
 
-        self.mongo_db = pymongo.MongoClient()
+        self.mongo_db = pymongo.MongoClient(host=self.mongo_host)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
     def tearDown(self) -> None:
