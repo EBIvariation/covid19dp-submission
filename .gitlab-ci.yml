@@ -75,7 +75,6 @@ deploy-python-tool-development:
   only:
     - external_pull_requests
     - master
-    - test_deployment
 
 deploy-python-tool-production:
   extends: .deploy-python-tool
