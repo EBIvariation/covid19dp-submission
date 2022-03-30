@@ -1,27 +1,7 @@
-process download_snapshot {
-    input:
-    val flag from true
-
-    output:
-    val true into download_snapshot_success
-    
-    script:
-    """
-    export PYTHONPATH="$params.executable.python.script_path"
-    ($params.executable.python.interpreter \
-        -m steps.download_snapshot \
-        --download-url $params.submission.download_url \
-        --snapshot-name $params.submission.snapshot_name \
-        --download-target-dir $params.submission.download_target_dir \
-    ) >> $params.submission.log_dir/download_snapshot.log 2>&1
-    """
-}
-
 process validate_vcfs {
     Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
     
     input:
-    val flag from download_snapshot_success
     val vcf_file from vcf_file_list
     
     output:
@@ -43,7 +23,6 @@ process asm_check_vcfs {
     Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
 
     input:
-    val flag from download_snapshot_success
     val vcf_file from vcf_file_list
 
     output:

@@ -23,8 +23,11 @@ logger = logging_config.get_logger(__name__)
 
 
 def should_skip_asm_check(vcf_file: str) -> bool:
+    cat_command = 'cat'
+    if vcf_file.endswith(".gz"):
+        cat_command = 'zcat'
     return int(run_command_with_output(f"Determine if the VCF file is empty...",
-                                       f"zcat {vcf_file} | grep -v ^# | wc -l",
+                                       f"{cat_command} {vcf_file} | grep -v ^# | wc -l",
                                        return_process_output=True)) == 0
 
 

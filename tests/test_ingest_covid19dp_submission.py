@@ -1,13 +1,14 @@
 import glob
 import os
-import pymongo
 import shutil
-import yaml
-
-from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
-from covid19dp_submission import ROOT_DIR
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from unittest import TestCase
+
+import pymongo
+import yaml
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+
+from covid19dp_submission import ROOT_DIR
+from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
 
 
 class TestIngestCovid19DPSubmission(TestCase):
@@ -15,19 +16,23 @@ class TestIngestCovid19DPSubmission(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
         self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
+        self.project = 'PRJEB45554'
+        self.snapshot_name = '2021_07_23_test_snapshot'
+        self.num_of_analyses = 1
         self.assembly_report_url = os.path.join(self.resources_folder,
                                                 'GCA_009858895.3_ASM985889v3_assembly_report.txt')
         self.fasta_file = os.path.join(self.resources_folder, 'GCA_009858895.3_ASM985889v3_genomic.fna')
         self.nextflow_config_file = os.path.join(self.resources_folder, 'nf.config')
 
         self.download_folder = os.path.join(self.resources_folder, 'download_snapshot')
-        self.download_target_dir = os.path.join(self.download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
-        self.download_url = "file:///" + os.path.join(self.resources_folder, 'vcf_files',
-                                                      '2021_07_23_test_snapshot.tar.gz')
+
         self.processing_folder = os.path.join(self.resources_folder, 'processing')
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         os.makedirs(self.processing_folder)
+        self.download_target_dir = os.path.join(self.processing_folder, '30_eva_valid', self.snapshot_name)
+        self.processed_analyses_file = os.path.join(self.processing_folder, 'processed_analyses_file.txt')
+
 
         self.accessioning_database_name = "eva_accession"
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
@@ -75,9 +80,19 @@ class TestIngestCovid19DPSubmission(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
+    def download_test_files(self):
+        os.makedirs(self.download_target_dir)
+        for i in range(1, 6):
+            shutil.copy(os.path.join(self.resources_folder, 'vcf_files', f'file{i}.vcf'), self.download_target_dir)
+        return self.download_target_dir
+
+
     def test_ingest_covid19dp_submission(self):
-        ingest_covid19dp_submission(download_url=self.download_url, snapshot_name=None,
-                                    project_dir=self.processing_folder, app_config_file=self.app_config_file,
+        self.download_test_files()
+        ingest_covid19dp_submission(project=self.project, snapshot_name=self.snapshot_name,
+                                    project_dir=self.processing_folder, num_analyses=self.num_of_analyses,
+                                    processed_analyses_file=self.processed_analyses_file,
+                                    app_config_file=self.app_config_file,
                                     nextflow_config_file=self.nextflow_config_file, resume=False)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
             .count_documents(filter={})

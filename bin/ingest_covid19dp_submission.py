@@ -20,11 +20,15 @@ from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_su
 def main():
     parser = argparse.ArgumentParser(description='Ingest a snapshot submission from the Covid-19 data portal project',
                                      formatter_class=argparse.RawTextHelpFormatter, add_help=False)
-    parser.add_argument("--download-url",
-                        help="URL to the data snapshot (ex: http://path/to/snapshots/YYYY_MM_DD.tar.gz)", required=True)
-    parser.add_argument("--snapshot-name", help="Snapshot name (ex: 2021_06_28_filtered_vcf)", default=None,
+    parser.add_argument("--project", default='PRJEB45554', required=False,
+                        help="project from which analyses needs to be downloaded")
+    parser.add_argument("--snapshot-name", help="Snapshot name (ex: 2021_06_28_14_28_56)", default=None,
                         required=False)
     parser.add_argument("--project-dir", help="Project directory (ex: /path/to/PRJ)", default=None, required=True)
+    parser.add_argument("--num-analyses", type=int, default=10000, required=False,
+                        help="Number of analyses to download (max = 10000)")
+    parser.add_argument("--processed-analyses-file", required=True,
+                        help="full path to the file containing all the processed analyses")
     parser.add_argument("--app-config-file",
                         help="Full path to the application config file (ex: /path/to/config.yml)", required=True)
     parser.add_argument("--nextflow-config-file",
@@ -33,8 +37,9 @@ def main():
                         help="Indicate if a previous concatenation job is to be resumed", action='store_true',
                         required=False)
     args = parser.parse_args()
-    ingest_covid19dp_submission(args.download_url, args.snapshot_name, args.project_dir, args.app_config_file,
-                                args.nextflow_config_file, args.resume)
+    ingest_covid19dp_submission(args.project, args.snapshot_name, args.project_dir, args.num_analyses,
+                                args.processed_analyses_file, args.app_config_file, args.nextflow_config_file,
+                                args.resume)
 
 
 if __name__ == "__main__":
