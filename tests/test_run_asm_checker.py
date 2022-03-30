@@ -29,7 +29,7 @@ class TestRunAsmChecker(TestCase):
         self.assertTrue(should_skip_asm_check(file_with_no_variants_only_headers))
 
     def test_asm_check_successful(self):
-        file_that_should_not_generate_error = f"{self.vcf_files_folder}/file1.vcf.gz"
+        file_that_should_not_generate_error = f"{self.vcf_files_folder}/file1.vcf"
         run_asm_checker(vcf_file=file_that_should_not_generate_error,
                         assembly_checker_binary="vcf_assembly_checker_linux",
                         assembly_report=self.assembly_report_url, assembly_fasta=self.fasta_file,

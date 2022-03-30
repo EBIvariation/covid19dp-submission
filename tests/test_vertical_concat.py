@@ -1,14 +1,14 @@
 import glob
 import os
 import shutil
+from unittest import TestCase
 
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
+
+from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.steps.bgzip_and_index_vcf import bgzip_and_index
-from covid19dp_submission.steps.download_snapshot import download_snapshot
 from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline \
     import run_vcf_vertical_concat_pipeline, get_output_vcf_file_name
-from covid19dp_submission import ROOT_DIR
-from ebi_eva_common_pyutils.command_utils import run_command_with_output
-from unittest import TestCase
 
 
 class TestVCFVerticalConcat(TestCase):
@@ -16,7 +16,6 @@ class TestVCFVerticalConcat(TestCase):
     download_folder = os.path.join(resources_folder, 'download_snapshot')
     download_target_dir = os.path.join(download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
     processing_dir = os.path.join(resources_folder, 'processing_dir')
-    download_url = "file:///" + os.path.join(resources_folder, 'vcf_files', '2021_07_23_test_snapshot.tar.gz')
 
     def setUp(self) -> None:
         shutil.rmtree(self.download_folder, ignore_errors=True)
@@ -26,11 +25,16 @@ class TestVCFVerticalConcat(TestCase):
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_dir, ignore_errors=True)
 
+    def download_test_files(self):
+        os.makedirs(self.download_target_dir)
+        for i in range(1, 6):
+            shutil.copy(os.path.join(self.resources_folder, 'vcf_files', f'file{i}.vcf'), self.download_target_dir)
+        return self.download_target_dir
+
     # Tests require nextflow and bcftools installed locally and in PATH
     def test_concat_uninterrupted(self):
-        download_target_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                                download_target_dir=self.download_target_dir)
-        for vcf_file in glob.glob(f"{download_target_dir}/*.vcf.gz"):
+        download_target_dir = self.download_test_files()
+        for vcf_file in glob.glob(f"{download_target_dir}/*.vcf"):
             bgzip_and_index(vcf_file, "bcftools")
         #   s0.vcf.gz   s1.vcf.gz   s2.vcf.gz   s3.vcf.gz   s4.vcf.gz
         #       \           /           \           /

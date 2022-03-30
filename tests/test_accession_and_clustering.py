@@ -5,7 +5,6 @@ import shutil
 
 from covid19dp_submission.steps.accession_vcf import accession_vcf
 from covid19dp_submission.steps.cluster_assembly import cluster_assembly
-from covid19dp_submission.steps.download_snapshot import download_snapshot
 from covid19dp_submission import ROOT_DIR
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from unittest import TestCase
@@ -22,8 +21,7 @@ class TestAccessionVcf(TestCase):
 
         self.download_folder = os.path.join(self.resources_folder, 'download_snapshot')
         self.download_target_dir = os.path.join(self.download_folder, '30_eva_valid', '2021_07_23_test_snapshot')
-        self.download_url = "file:///" + os.path.join(self.resources_folder, 'vcf_files',
-                                                      '2021_07_23_test_snapshot.tar.gz')
+
         self.processing_folder = os.path.join(self.resources_folder, 'processing')
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
@@ -61,10 +59,15 @@ class TestAccessionVcf(TestCase):
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
+
+    def download_test_files(self):
+        os.makedirs(self.download_target_dir)
+        shutil.copy(os.path.join(self.resources_folder, 'vcf_files', 'file1.vcf'), self.download_target_dir)
+        return self.download_target_dir
+
     def test_accession_and_clustering(self):
-        download_dir = download_snapshot(download_url=self.download_url, snapshot_name=None,
-                                         download_target_dir=self.download_target_dir)
-        vcf_file = f"{download_dir}/file1_test_snapshot.vcf.gz"
+        download_dir = self.download_test_files()
+        vcf_file = f"{download_dir}/file1.vcf"
         output_vcf_file = f"{self.processing_folder}/output.accessioned.vcf"
         accession_vcf(input_vcf_file=vcf_file, accessioning_jar_file=self.accession_jar_file,
                       accessioning_properties_file=self.accessioning_properties_file,
