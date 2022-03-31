@@ -9,6 +9,8 @@ variables:
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
+  MONGO_HOST: mongo
+  POSTGRES_HOST: postgres
 
 test:
   stage: test
