@@ -4,11 +4,11 @@ stages:
 
 variables:
   VCF_VALIDATOR_VERSION: 0.9.4
+  MONGO_HOST: mongo
+  POSTGRES_HOST: postgres
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
-  MONGO_HOST: mongo
-  POSTGRES_HOST: postgres
 
 test:
   stage: test
@@ -48,7 +48,6 @@ test:
     - external_pull_requests
     - tags
     - master
-    - test_deployment
 
 
 # Not executed, parent job definition
