@@ -28,8 +28,8 @@ class TestAccessionVcf(TestCase):
         os.makedirs(self.processing_folder)
 
         self.accessioning_database_name = "eva_accession"
-        self.mongo_host = 'mongo'
-        self.postgres_host = 'postgres'
+        self.mongo_host = os.getenv('MONGO_HOST', 'localhost')
+        self.postgres_host = os.getenv('POSTGRES_HOST', 'localhost')
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accession_config.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
         self.accessioning_properties = open(os.path.join(self.resources_folder, 'properties',

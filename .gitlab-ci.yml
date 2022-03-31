@@ -7,6 +7,8 @@ variables:
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
+  MONGO_HOST: mongo
+  POSTGRES_HOST: postgres
 
 test:
   stage: test
@@ -63,7 +65,6 @@ test:
     - eval "$(ssh-agent)"
     - echo "$EVA_ETL_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${CLUSTER_USER}@${CLUSTER_LOGIN_NODE_CODON} "${EVA_SOFTWARE_PATH_CODON}/covid19dp-submission/${ENVIRONMENT_NAME}_deployments/deploy.sh ${DEPLOY_POINT}"
-    - ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${CLUSTER_USER}@${CLUSTER_LOGIN_NODE} "${EVA_SOFTWARE_PATH}/covid19dp-submission/${ENVIRONMENT_NAME}_deployments/deploy.sh ${DEPLOY_POINT}"
   dependencies:
     - test
 
@@ -75,7 +76,6 @@ deploy-python-tool-development:
   only:
     - external_pull_requests
     - master
-    - test_deployment
 
 deploy-python-tool-production:
   extends: .deploy-python-tool
