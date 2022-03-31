@@ -33,7 +33,7 @@ jobs:
           - 27017:27017
     env:
       MONGODB_HOST: mongo
-      MONGODB_PORT: ${{ job.services.mongodb.ports[27017] }}
+      MONGODB_PORT: ${{ jobs.services.mongodb.ports[27017] }}
       POSTGRES_HOST: postgres
     steps:
     - uses: actions/checkout@v2
