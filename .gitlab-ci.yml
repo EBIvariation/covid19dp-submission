@@ -2,14 +2,40 @@ stages:
   - test
   - deploy
 
+variables:
+  VCF_VALIDATOR_VERSION: 0.9.4
+  MONGO_HOST: mongo
+  POSTGRES_HOST: postgres
+  POSTGRES_DB: postgres
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
 test:
   stage: test
-  image: python:3.8.7-slim-buster
+  image: ubuntu:20.04
+  services:
+    - mongo:4.0.21
+    - postgres:9.6
   before_script:
-    - python -m pip install --upgrade pip
+    - apt-get update
+    - apt-get upgrade -y
+    - apt-get install -y tzdata
+    - apt-get install -y wget
+    - apt-get install -y curl
+    - apt-get install -y git
+    - apt-get install -y rsync
+    - apt-get install -y openjdk-8-jdk
+    - apt-get -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
+    - bash -c "export JAVA_CMD="$(which java)" && cd /usr/bin && (curl -s https://get.nextflow.io | bash) && chmod 755 nextflow"
+    - /usr/bin/nextflow -version
+    - bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_validator_linux && chmod 755 vcf_validator_linux"
+    - bash -c "cd /usr/bin && wget https://github.com/EBIvariation/vcf-validator/releases/download/v$VCF_VALIDATOR_VERSION/vcf_assembly_checker_linux && chmod 755 vcf_assembly_checker_linux"
+    - apt-get install -y python3
+    - apt-get install -y python3-pip
+    - python3 -m pip install --upgrade pip
     - pip install pytest certifi
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - python setup.py install
+    - python3 setup.py install
     # reduce the default SSL security level to get around a misconfiguration in the Ensembl server
     # https://github.com/Ensembl/ensembl-rest/issues/427
     # See https://askubuntu.com/a/1233456
@@ -27,7 +53,7 @@ test:
 # Not executed, parent job definition
 .deploy-python-tool:
   stage: deploy
-  image: python:3.8.7-slim-buster
+  image: ubuntu:20.04
   environment:
     name: $ENVIRONMENT_NAME
   script:
@@ -37,7 +63,7 @@ test:
     - apt-get -y install openssh-client
     - eval "$(ssh-agent)"
     - echo "$EVA_ETL_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${CLUSTER_USER}@${CLUSTER_LOGIN_NODE} "${EVA_SOFTWARE_PATH}/covid19dp-submission/${ENVIRONMENT_NAME}_deployments/deploy.sh ${DEPLOY_POINT}"
+    - ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${CLUSTER_USER}@${CLUSTER_LOGIN_NODE_CODON} "${EVA_SOFTWARE_PATH_CODON}/covid19dp-submission/${ENVIRONMENT_NAME}_deployments/deploy.sh ${DEPLOY_POINT}"
   dependencies:
     - test
 

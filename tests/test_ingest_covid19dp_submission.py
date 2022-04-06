@@ -39,6 +39,8 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
         self.release_properties_file = os.path.join(self.processing_folder, 'release.properties')
         self.app_config_file = os.path.join(self.processing_folder, 'app_config.yml')
+        self.mongo_host = os.getenv('MONGO_HOST', 'localhost')
+        self.postgres_host = os.getenv('POSTGRES_HOST', 'localhost')
         accessioning_properties = open(os.path.join(self.resources_folder, 'properties', 'accessioning.properties'))\
             .read().format(**self.__dict__)
         clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
@@ -70,7 +72,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                          .read().format(**self.__dict__))
         yaml.safe_dump(data=self.app_config, stream=open(self.app_config_file, "w"))
 
-        self.mongo_db = pymongo.MongoClient()
+        self.mongo_db = pymongo.MongoClient(host=self.mongo_host)
         self.mongo_db.drop_database(self.accessioning_database_name)
 
     def tearDown(self) -> None:
