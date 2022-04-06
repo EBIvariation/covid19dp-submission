@@ -48,6 +48,7 @@ test:
     - external_pull_requests
     - tags
     - master
+    - main
 
 
 # Not executed, parent job definition
@@ -75,6 +76,7 @@ deploy-python-tool-development:
   only:
     - external_pull_requests
     - master
+    - main
 
 deploy-python-tool-production:
   extends: .deploy-python-tool
