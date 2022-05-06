@@ -111,7 +111,9 @@ process accession_vcf {
     """
 }
 
-process sync_accessions_to_public_ftp {    
+process sync_accessions_to_public_ftp {
+    label 'datamover'
+
     input:
     val flag from accession_vcf_success
     
