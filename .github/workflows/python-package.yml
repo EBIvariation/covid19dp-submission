@@ -62,4 +62,5 @@ jobs:
         sudo apt -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
     - name: Test with pytest
       run: |
+        export NXF_DEFAULT_DSL=1
         PYTHONPATH=. pytest tests
