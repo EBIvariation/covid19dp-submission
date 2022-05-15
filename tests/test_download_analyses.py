@@ -24,11 +24,11 @@ class TestDownloadSnapshot(TestCase):
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
 
     def get_processed_files_data(self):
-        return ["ERZ3372540,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372540/SRR15239121.vcf",
-                "\nERZ3372549,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372549/ERR6259542.vcf",
-                "\nERZ3372550,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372550/ERR6259546.vcf",
-                "\nERZ3372551,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372551/ERR6259557.vcf",
-                "\nERZ3400189,ftp.sra.ebi.ac.uk/vol1/ERZ340/ERZ3400189/SRR15239121.vcf"
+        return ["ERZ3372540,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372540/SRR15239121.vcf\n",
+                "ERZ3372549,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372549/ERR6259542.vcf\n",
+                "ERZ3372550,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372550/ERR6259546.vcf\n",
+                "ERZ3372551,ftp.sra.ebi.ac.uk/vol1/ERZ337/ERZ3372551/ERR6259557.vcf\n",
+                "ERZ3400189,ftp.sra.ebi.ac.uk/vol1/ERZ340/ERZ3400189/SRR15239121.vcf\n"
                 ]
 
     def create_processed_analysis_file(self, data):
@@ -44,8 +44,8 @@ class TestDownloadSnapshot(TestCase):
     def test_download_analyses(self):
         data = self.get_processed_files_data()
         self.create_processed_analysis_file(data)
-        ascp_bin = os.path.expanduser("~/.aspera/connect/bin/ascp")
-        aspera_id_dsa_key = os.path.expanduser("~/.aspera/connect/etc/asperaweb_id_dsa.openssh")
+        ascp_bin = os.path.expanduser("ascp")
+        aspera_id_dsa_key = os.environ['ASPERA_ID_DSA']
         download_analyses(project=self.project, num_analyses=self.num_analyses_to_download,
                           processed_analyses_file=self.processed_analyses_file,
                           download_target_dir=self.download_target_dir, ascp=ascp_bin,
@@ -57,12 +57,14 @@ class TestDownloadSnapshot(TestCase):
 
 class TestDownloadAnalysisENA(TestCase):
     resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
-    download_target_dir = os.path.join(resources_folder, 'download_snapshot')
+    download_target_dir = os.path.join(resources_folder, 'download_analyses')
     processed_analyses_file = os.path.join(download_target_dir, 'processed_analyses.csv')
 
+    def setUp(self) -> None:
+        os.makedirs(self.download_target_dir)
+
     def tearDown(self) -> None:
-        if os.path.exists(self.processed_analyses_file):
-            os.remove(self.processed_analyses_file)
+        shutil.rmtree(self.download_target_dir, ignore_errors=True)
 
     def test_download_files_via_aspera(self):
         analyses_array = [
