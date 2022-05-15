@@ -62,7 +62,7 @@ jobs:
         sudo apt -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
     - name: Set up ascp binary
     # Might need to periodically update this URL
-    - run: |
+      run: |
         curl https://d3gcli72yxqn2z.cloudfront.net/connect_latest/v4/bin/ibm-aspera-connect_4.1.3.93_linux.tar.gz -o ibm-aspera-connect.tar.gz
         tar xzvf ibm-aspera-connect.tar.gz
         ./ibm-aspera-connect_*_linux.sh
