@@ -60,6 +60,9 @@ jobs:
       run: |
         sudo apt update
         sudo apt -y install maven samtools bcftools parallel libbz2-dev liblzma-dev
+    - name: Set up ascp binary
+      - curl https://d3gcli72yxqn2z.cloudfront.net/connect_latest/v4/bin/ibm-aspera-connect_4.1.3.93_linux.tar.gz -o ibm-aspera-connect.tar.gz
+      -
     - name: Test with pytest
       run: |
         export NXF_DEFAULT_DSL=1

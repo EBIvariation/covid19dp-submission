@@ -2,9 +2,10 @@ import glob
 import os
 import shutil
 from unittest import TestCase
+from unittest.mock import patch
 
 from covid19dp_submission import ROOT_DIR
-from covid19dp_submission.download_analyses import download_analyses
+from covid19dp_submission.download_analyses import download_analyses, download_files_via_aspera
 
 
 class TestDownloadSnapshot(TestCase):
@@ -43,9 +44,36 @@ class TestDownloadSnapshot(TestCase):
     def test_download_analyses(self):
         data = self.get_processed_files_data()
         self.create_processed_analysis_file(data)
+        ascp_bin = os.path.expanduser("~/.aspera/connect/bin/ascp")
+        aspera_id_dsa_key = os.path.expanduser("~/.aspera/connect/etc/asperaweb_id_dsa.openssh")
         download_analyses(project=self.project, num_analyses=self.num_analyses_to_download,
                           processed_analyses_file=self.processed_analyses_file,
-                          download_target_dir=self.download_target_dir)
+                          download_target_dir=self.download_target_dir, ascp=ascp_bin,
+                          aspera_id_dsa=aspera_id_dsa_key, batch_size=100)
         vcf_files = glob.glob(f"{self.download_target_dir}/*.vcf")
         self.assertEqual(self.num_analyses_to_download, len(vcf_files))
         self.check_processed_analysis_file(len(data) + self.num_analyses_to_download)
+
+
+class TestDownloadAnalysisENA(TestCase):
+    resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
+    download_target_dir = os.path.join(resources_folder, 'download_snapshot')
+    processed_analyses_file = os.path.join(download_target_dir, 'processed_analyses.csv')
+
+    def tearDown(self) -> None:
+        if os.path.exists(self.processed_analyses_file):
+            os.remove(self.processed_analyses_file)
+
+    def test_download_files_via_aspera(self):
+        analyses_array = [
+            {'run_ref': f'rr{i}', 'analysis_accession': f'acc{i}', 'submitted_ftp': f'ftp.ebi.ac.uk/acc{i}/rr{i}.vcf.gz ',
+             'submitted_aspera': f'asperap.ebi.ac.uk/acc{i}/rr{i}.vcf.gz'} for i in range(1, 9)
+        ]
+        with patch('covid19dp_submission.download_analyses.run_command_with_output') as mock_run:
+            download_files_via_aspera(analyses_array, self.download_target_dir, self.processed_analyses_file,
+                                      'ascp', 'aspera_id_dsa', batch_size=5)
+        # 2 batches of 5 to get 8 files
+        assert mock_run.call_count == 2
+        with open(self.processed_analyses_file) as open_file:
+            lines = open_file.readlines()
+            assert len(lines) == 8

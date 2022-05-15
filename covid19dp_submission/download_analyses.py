@@ -18,13 +18,16 @@ import os
 import urllib
 
 import requests
+from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
+from more_itertools import chunked
 from retry import retry
 
 logger = logging_config.get_logger(__name__)
 
 
-def download_analyses(project, num_analyses, processed_analyses_file, download_target_dir):
+def download_analyses(project, num_analyses, processed_analyses_file, download_target_dir, ascp, aspera_id_dsa,
+                      batch_size=100):
     total_analyses = total_analyses_in_project(project)
     logger.info(f"total analyses in project {project}: {total_analyses}")
 
@@ -32,7 +35,8 @@ def download_analyses(project, num_analyses, processed_analyses_file, download_t
     logger.info(f"number of analyses to process: {len(analyses_array)}")
 
     os.makedirs(download_target_dir, exist_ok=True)
-    download_files(analyses_array, download_target_dir, processed_analyses_file)
+    download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
+                              batch_size)
 
     vcf_files_downloaded = glob.glob(f"{download_target_dir}/*.vcf")
     logger.info(f"total number of files downloaded: {len(vcf_files_downloaded)}")
@@ -83,8 +87,10 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
 def get_analyses_from_ena(project, offset, limit):
-    analyses_url = f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}&offset={offset}" \
-                   f"&limit={limit}&format=json&fields=run_ref,analysis_accession,submitted_ftp"
+    analyses_url = (
+        f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}&offset={offset}"
+        f"&limit={limit}&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera"
+    )
     response = requests.get(analyses_url)
     if response.status_code != 200:
         logger.error(f"Error fetching analyses info from ENA for {project}")
@@ -113,7 +119,7 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
     logger.info(f"total number of files to download: {len(analyses_array)}")
     with open(processed_analyses_file, 'a') as f:
         for analysis in analyses_array:
-            download_url = f"http://{analysis['submitted_ftp']}"
+            download_url = f"ftp://{analysis['submitted_ftp']}"
             download_file_name = f"{analysis['analysis_accession']}.vcf"
             download_file_path = f"{download_target_dir}/{download_file_name}"
             try:
@@ -125,6 +131,20 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
                 logger.warning(f"Could not download file : {download_file_path}")
                 if os.path.exists(download_file_path):
                     os.remove(download_file_path)
+
+
+def download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
+                              batch_size=100):
+    logger.info(f"total number of files to download: {len(analyses_array)}")
+    with open(processed_analyses_file, 'a') as open_file:
+        for analysis_batch in chunked(analyses_array, batch_size):
+            download_urls = [
+                f"{analysis['submitted_aspera']}" for analysis in analysis_batch if analysis
+            ]
+            command = f'{ascp} -i {aspera_id_dsa} -QT -l 300m -P 33001 {" ".join(download_urls)} {download_target_dir}'
+            run_command_with_output(f"Download batch of covid19 data", command)
+            for analysis in analysis_batch:
+                open_file.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
@@ -142,6 +162,10 @@ def main():
     parser.add_argument("--processed-analyses-file", required=True,
                         help="full path to the file containing all the processed analyses")
     parser.add_argument("--download-target-dir", required=True, help="Full path to the target download directory")
+    parser.add_argument("--ascp-bin", required=True, help="Full path to the ascp binary.")
+    parser.add_argument("--aspera-id-dsa-key", required=True, help="Full path to the aspera id dsa key.")
+    parser.add_argument("--batch-size", required=True, type=int, help="number of vcf file to download with each ascp "
+                                                                      "command.")
 
     args = parser.parse_args()
     logging_config.add_stdout_handler()
@@ -149,7 +173,8 @@ def main():
     if args.num_analyses < 1 or args.num_analyses > 10000:
         raise Exception("number of analyses to download should be between 1 and 10000")
 
-    download_analyses(args.project, args.num_analyses, args.processed_analyses_file, args.download_target_dir)
+    download_analyses(args.project, args.num_analyses, args.processed_analyses_file, args.download_target_dir,
+                      args.ascp_bin, args.aspera_id_dsa_key, args.batch_size)
 
 
 if __name__ == "__main__":

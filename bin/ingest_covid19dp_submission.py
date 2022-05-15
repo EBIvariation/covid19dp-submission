@@ -14,6 +14,8 @@
 # limitations under the License.
 import argparse
 
+from ebi_eva_common_pyutils.logger import logging_config
+
 from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
 
 
@@ -37,6 +39,8 @@ def main():
                         help="Indicate if a previous concatenation job is to be resumed", action='store_true',
                         required=False)
     args = parser.parse_args()
+    logging_config.add_stdout_handler()
+
     ingest_covid19dp_submission(args.project, args.snapshot_name, args.project_dir, args.num_analyses,
                                 args.processed_analyses_file, args.app_config_file, args.nextflow_config_file,
                                 args.resume)

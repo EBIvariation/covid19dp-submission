@@ -33,9 +33,11 @@ def get_analyses_file_list(download_target_dir: str) -> List[str]:
 
 
 def _create_required_dirs(config: dict):
-    required_dirs = [config['submission']['download_target_dir'], config['submission']['concat_processing_dir'],
-                     config['submission']['accession_output_dir'], config['submission']['public_ftp_dir'],
-                     config['submission']['log_dir'], config['submission']['validation_dir']]
+    required_dirs = [config['submission']['download_target_dir'],
+                     config['submission']['concat_processing_dir'],
+                     config['submission']['accession_output_dir'],
+                     config['submission']['log_dir'],
+                     config['submission']['validation_dir']]
     for dir_name in required_dirs:
         os.makedirs(dir_name, exist_ok=True)
 
@@ -70,7 +72,6 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
                                       'script_path': os.path.dirname(inspect.getmodule(sys.modules[__name__]).__file__)}
     config['executable']['nextflow_config_file'] = nextflow_config_file
     config['executable']['nextflow_param_file'] = submission_param_file
-
     return config
 
 
@@ -86,7 +87,8 @@ def ingest_covid19dp_submission(project: str, snapshot_name: str, project_dir: s
     _create_required_dirs(config)
 
     if process_new_snapshot:
-        download_analyses(project, num_analyses, processed_analyses_file, config['submission']['download_target_dir'])
+        download_analyses(project, num_analyses, processed_analyses_file, config['submission']['download_target_dir'],
+                          config['executable']['ascp_bin'], config['aspera']['aspera_id_dsa_key'], config.get('download_batch_size', 100))
 
     vcf_files_to_be_downloaded = create_download_file_list(config)
     config['submission']['concat_result_file'] = \
