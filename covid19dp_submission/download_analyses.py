@@ -31,6 +31,7 @@ logger = logging_config.get_logger(__name__)
 class UnfinishedBatchError(Exception):
     pass
 
+
 def download_analyses(project, num_analyses, processed_analyses_file, download_target_dir, ascp, aspera_id_dsa,
                       batch_size=100):
     total_analyses = total_analyses_in_project(project)
@@ -146,9 +147,10 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
     logger.info(f"total number of files to download: {len(analyses_array)}")
     remaining_analyses_array = []
     with open(processed_analyses_file, 'a') as open_file:
-        for analysis_batch in chunked(analyses_array, batch_size):
+        # This copy won't change throughout the iteration
+        for analysis_batch in chunked(copy.copy(analyses_array), batch_size):
             download_urls = [
-                f"era-fasp@{analysis['submitted_aspera']}" for analysis in analysis_batch if analysis
+                f"era-fasp@{analysis['submitted_aspera']}" for analysis in analysis_batch
             ]
             command = f'{ascp} -i {aspera_id_dsa} -QT -l 300m -P 33001 {" ".join(download_urls)} {download_target_dir}'
             run_command_with_output(f"Download batch of covid19 data", command)
@@ -165,7 +167,8 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
                     remaining_analyses_array.append(analysis)
     if len(analyses_array) > 0:
         # Trigger a retry
-        raise UnfinishedBatchError(f'There are {len(remaining_analyses_array)} vcf file that were not downloaded')
+        raise UnfinishedBatchError(f'There are {len(remaining_analyses_array)} vcf files that were not downloaded and '
+                                   f'{len(analyses_array)} remaining to download')
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
