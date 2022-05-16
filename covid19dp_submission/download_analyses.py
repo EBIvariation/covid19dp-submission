@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import argparse
+import copy
 import glob
 import os
+import shutil
 import urllib
 
 import requests
@@ -26,6 +28,9 @@ from retry import retry
 logger = logging_config.get_logger(__name__)
 
 
+class UnfinishedBatchError(Exception):
+    pass
+
 def download_analyses(project, num_analyses, processed_analyses_file, download_target_dir, ascp, aspera_id_dsa,
                       batch_size=100):
     total_analyses = total_analyses_in_project(project)
@@ -35,10 +40,12 @@ def download_analyses(project, num_analyses, processed_analyses_file, download_t
     logger.info(f"number of analyses to process: {len(analyses_array)}")
 
     os.makedirs(download_target_dir, exist_ok=True)
-    download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
+    # Sending a shallow copy of the analyses_array because it will be modified during the download to accommodate
+    # the retry mechanism
+    download_files_via_aspera(copy.copy(analyses_array), download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
                               batch_size)
 
-    vcf_files_downloaded = glob.glob(f"{download_target_dir}/*.vcf")
+    vcf_files_downloaded = glob.glob(f"{download_target_dir}/*.vcf") + glob.glob(f"{download_target_dir}/*.vcf.gz")
     logger.info(f"total number of files downloaded: {len(vcf_files_downloaded)}")
 
     if len(analyses_array) != len(vcf_files_downloaded):
@@ -119,7 +126,7 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
     logger.info(f"total number of files to download: {len(analyses_array)}")
     with open(processed_analyses_file, 'a') as f:
         for analysis in analyses_array:
-            download_url = f"ftp://{analysis['submitted_ftp']}"
+            download_url = f"http://{analysis['submitted_ftp']}"
             download_file_name = f"{analysis['analysis_accession']}.vcf"
             download_file_path = f"{download_target_dir}/{download_file_name}"
             try:
@@ -133,9 +140,11 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
                     os.remove(download_file_path)
 
 
+@retry(exceptions=(UnfinishedBatchError,), logger=logger, tries=4, delay=10, backoff=1.2, jitter=(1, 3))
 def download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
                               batch_size=100):
     logger.info(f"total number of files to download: {len(analyses_array)}")
+    remaining_analyses_array = []
     with open(processed_analyses_file, 'a') as open_file:
         for analysis_batch in chunked(analyses_array, batch_size):
             download_urls = [
@@ -143,8 +152,20 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
             ]
             command = f'{ascp} -i {aspera_id_dsa} -QT -l 300m -P 33001 {" ".join(download_urls)} {download_target_dir}'
             run_command_with_output(f"Download batch of covid19 data", command)
+
             for analysis in analysis_batch:
-                open_file.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
+                expected_output_file = os.path.join(download_target_dir, os.path.basename(analysis['submitted_aspera']))
+                if os.path.exists(expected_output_file):
+                    open_file.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
+                    # WARNING: This will modify the content of the original analysis array allowing the retry to
+                    # only deal with a subset of files to download.
+                    analyses_array.remove(analysis)
+                else:
+                    logger.warn(f"Failed to download {analysis['submitted_aspera']}")
+                    remaining_analyses_array.append(analysis)
+    if len(analyses_array) > 0:
+        # Trigger a retry
+        raise UnfinishedBatchError(f'There are {len(remaining_analyses_array)} vcf file that were not downloaded')
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
