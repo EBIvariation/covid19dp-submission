@@ -8,6 +8,10 @@ from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.download_analyses import download_analyses, download_files_via_aspera
 
 
+def touch(f):
+    open(f, 'w').close()
+
+
 class TestDownloadSnapshot(TestCase):
     resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
     toplevel_download_folder = os.path.join(resources_folder, 'download_analyses')
@@ -68,10 +72,14 @@ class TestDownloadAnalysisENA(TestCase):
 
     def test_download_files_via_aspera(self):
         analyses_array = [
-            {'run_ref': f'rr{i}', 'analysis_accession': f'acc{i}', 'submitted_ftp': f'ftp.ebi.ac.uk/acc{i}/rr{i}.vcf.gz ',
+            {'run_ref': f'rr{i}', 'analysis_accession': f'acc{i}', 'submitted_ftp': f'ftp.ebi.ac.uk/acc{i}/rr{i}.vcf.gz',
              'submitted_aspera': f'asperap.ebi.ac.uk/acc{i}/rr{i}.vcf.gz'} for i in range(1, 9)
         ]
         with patch('covid19dp_submission.download_analyses.run_command_with_output') as mock_run:
+            # create the expected output files so that the download do not crash
+            for analysis in analyses_array:
+                expected_file = os.path.join(self.download_target_dir, os.path.basename(analysis['submitted_aspera']))
+                touch(expected_file)
             download_files_via_aspera(analyses_array, self.download_target_dir, self.processed_analyses_file,
                                       'ascp', 'aspera_id_dsa', batch_size=5)
         # 2 batches of 5 to get 8 files
