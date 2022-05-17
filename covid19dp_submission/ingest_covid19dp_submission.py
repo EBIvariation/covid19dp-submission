@@ -29,7 +29,7 @@ from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipe
 
 def get_analyses_file_list(download_target_dir: str) -> List[str]:
     return sorted([os.path.basename(member) for member in os.listdir(download_target_dir)
-                   if member.lower().endswith(".vcf")])
+                   if member.lower().endswith(".vcf") or member.lower().endswith(".vcf.gz")])
 
 
 def _create_required_dirs(config: dict):
@@ -75,18 +75,28 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
     return config
 
 
-def ingest_covid19dp_submission(project: str, snapshot_name: str, project_dir: str, num_analyses: int,
+def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int,
                                 processed_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
-                                resume: bool):
+                                resume: str):
     process_new_snapshot = False
-    if snapshot_name is None:
+    if resume is None:
         snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         process_new_snapshot = True
+    else:
+        snapshot_name = resume
 
     config = _get_config(snapshot_name, project_dir, nextflow_config_file, app_config_file)
-    _create_required_dirs(config)
 
     if process_new_snapshot:
+        _create_required_dirs(config)
+    else:
+        # Check that the snapshot exists
+        assert os.path.exists(
+            config['submission']['download_target_dir']), f'Cannot resume execution for snapshot {snapshot_name}'
+
+    list_file = get_analyses_file_list(config['submission']['download_target_dir'])
+    if len(list_file) < num_analyses:
+        num_analyses = num_analyses - len(list_file)
         download_analyses(project, num_analyses, processed_analyses_file, config['submission']['download_target_dir'],
                           config['executable']['ascp_bin'], config['aspera']['aspera_id_dsa_key'], config.get('download_batch_size', 100))
 
