@@ -86,14 +86,13 @@ class TestIngestCovid19DPSubmission(TestCase):
             shutil.copy(os.path.join(self.resources_folder, 'vcf_files', f'file{i}.vcf'), self.download_target_dir)
         return self.download_target_dir
 
-
     def test_ingest_covid19dp_submission(self):
         self.download_test_files()
-        ingest_covid19dp_submission(project=self.project, snapshot_name=self.snapshot_name,
+        ingest_covid19dp_submission(project=self.project,
                                     project_dir=self.processing_folder, num_analyses=self.num_of_analyses,
                                     processed_analyses_file=self.processed_analyses_file,
                                     app_config_file=self.app_config_file,
-                                    nextflow_config_file=self.nextflow_config_file, resume=False)
+                                    nextflow_config_file=self.nextflow_config_file, resume=None)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
             .count_documents(filter={})
         self.assertEqual(54, num_clustered_variants)

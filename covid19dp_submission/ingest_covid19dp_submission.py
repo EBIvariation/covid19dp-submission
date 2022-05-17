@@ -112,7 +112,8 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     run_nextflow_command = (f"cd {config['submission']['download_target_dir']}; " 
                             f"{config['executable']['nextflow']} run {nextflow_file_to_run} "
                             f"-c {nextflow_config_file} " 
-                            f"-resume " if resume else ""
                             f"--PYTHONPATH {config['executable']['python']['script_path']} "
                             f"-params-file {config['executable']['nextflow_param_file']}")
+    run_nextflow_command += " -resume" if resume else ""
+
     run_command_with_output(f"Running submission pipeline: {nextflow_file_to_run}...", run_nextflow_command)

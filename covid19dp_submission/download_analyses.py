@@ -117,9 +117,10 @@ def filter_out_processed_analyses(analyses_array, processed_analyses):
 
 def get_processed_analyses(processed_analyses_file):
     processed_analyses = set()
-    with open(processed_analyses_file, 'r') as file:
-        for line in file:
-            processed_analyses.add(line.split(",")[0])
+    if os.path.isfile(processed_analyses_file):
+        with open(processed_analyses_file, 'r') as file:
+            for line in file:
+                processed_analyses.add(line.split(",")[0])
     return processed_analyses
 
 
