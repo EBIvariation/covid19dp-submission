@@ -32,8 +32,6 @@ class TestIngestCovid19DPSubmission(TestCase):
         os.makedirs(self.processing_folder)
         self.download_target_dir = os.path.join(self.processing_folder, '30_eva_valid', self.snapshot_name)
         self.processed_analyses_file = os.path.join(self.processing_folder, 'processed_analyses_file.txt')
-
-
         self.accessioning_database_name = "eva_accession"
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')

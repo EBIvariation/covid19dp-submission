@@ -21,10 +21,14 @@ from typing import List
 import yaml
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
+from ebi_eva_common_pyutils.logger import logging_config
 
 from covid19dp_submission import NEXTFLOW_DIR
 from covid19dp_submission.download_analyses import download_analyses
 from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
+
+
+logger = logging_config.get_logger(__name__)
 
 
 def get_analyses_file_list(download_target_dir: str) -> List[str]:
@@ -99,7 +103,8 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
         num_analyses = num_analyses - len(list_file)
         download_analyses(project, num_analyses, processed_analyses_file, config['submission']['download_target_dir'],
                           config['executable']['ascp_bin'], config['aspera']['aspera_id_dsa_key'], config.get('download_batch_size', 100))
-
+    else:
+        logger.info(f'All {num_analyses} analysis have been downloaded already. Skipping.')
     vcf_files_to_be_downloaded = create_download_file_list(config)
     config['submission']['concat_result_file'] = \
         get_concat_result_file_name(config['submission']['concat_processing_dir'], len(vcf_files_to_be_downloaded),
