@@ -108,9 +108,11 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     nextflow_file_to_run = os.path.join(NEXTFLOW_DIR, 'submission_workflow.nf')
     yaml.safe_dump(config, open(config['executable']['nextflow_param_file'], "w"))
 
-    run_nextflow_command = f"{config['executable']['nextflow']} run {nextflow_file_to_run}"
-    run_nextflow_command += f" -c {nextflow_config_file}" if nextflow_config_file else ""
-    run_nextflow_command += f" -resume" if resume else ""
-    run_nextflow_command += f" --PYTHONPATH {config['executable']['python']['script_path']}"
-    run_nextflow_command += f" -params-file {config['executable']['nextflow_param_file']}"
+    # run the nextflow script in the download directory so that each execution is independent
+    run_nextflow_command = (f"cd {config['submission']['download_target_dir']}; " 
+                            f"{config['executable']['nextflow']} run {nextflow_file_to_run} "
+                            f"-c {nextflow_config_file} " 
+                            f"-resume " if resume else ""
+                            f"--PYTHONPATH {config['executable']['python']['script_path']} "
+                            f"-params-file {config['executable']['nextflow_param_file']}")
     run_command_with_output(f"Running submission pipeline: {nextflow_file_to_run}...", run_nextflow_command)
