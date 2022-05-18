@@ -5,7 +5,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from covid19dp_submission import ROOT_DIR
-from covid19dp_submission.download_analyses import download_analyses, download_files_via_aspera
+from covid19dp_submission.download_analyses import download_analyses, download_files_via_aspera, UnfinishedBatchError
 
 
 def touch(f):
@@ -65,7 +65,7 @@ class TestDownloadAnalysisENA(TestCase):
     processed_analyses_file = os.path.join(download_target_dir, 'processed_analyses.csv')
 
     def setUp(self) -> None:
-        os.makedirs(self.download_target_dir)
+        os.makedirs(self.download_target_dir, exist_ok=True)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.download_target_dir, ignore_errors=True)
@@ -87,3 +87,22 @@ class TestDownloadAnalysisENA(TestCase):
         with open(self.processed_analyses_file) as open_file:
             lines = open_file.readlines()
             assert len(lines) == 8
+
+    def test_retry_download_files_via_aspera(self):
+        analyses_array = [
+            {'run_ref': f'rr{i}', 'analysis_accession': f'acc{i}', 'submitted_ftp': f'ftp.ebi.ac.uk/acc{i}/rr{i}.vcf.gz',
+             'submitted_aspera': f'asperap.ebi.ac.uk/acc{i}/rr{i}.vcf.gz'} for i in range(1, 9)
+        ]
+        with patch('covid19dp_submission.download_analyses.run_command_with_output') as mock_run:
+            # create some of the expected output files so that the download retries
+            for analysis in analyses_array[:-1]:
+                expected_file = os.path.join(self.download_target_dir, os.path.basename(analysis['submitted_aspera']))
+                touch(expected_file)
+            with self.assertRaises(UnfinishedBatchError):
+                download_files_via_aspera(analyses_array, self.download_target_dir, self.processed_analyses_file,
+                                          'ascp', 'aspera_id_dsa', batch_size=5)
+        # 2 batches of 5 in first try then 3 more in subsequent tries = 5
+        assert mock_run.call_count == 5
+        with open(self.processed_analyses_file) as open_file:
+            lines = open_file.readlines()
+            assert len(lines) == 7

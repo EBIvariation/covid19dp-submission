@@ -146,7 +146,7 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
 def download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
                               batch_size=100):
     logger.info(f"total number of files to download: {len(analyses_array)}")
-    remaining_analyses_array = []
+    print(f'{len(analyses_array)} analysis')
     with open(processed_analyses_file, 'a') as open_file:
         # This copy won't change throughout the iteration
         for analysis_batch in chunked(copy.copy(analyses_array), batch_size):
@@ -165,11 +165,9 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
                     analyses_array.remove(analysis)
                 else:
                     logger.warn(f"Failed to download {analysis['submitted_aspera']}")
-                    remaining_analyses_array.append(analysis)
     if len(analyses_array) > 0:
         # Trigger a retry
-        raise UnfinishedBatchError(f'There are {len(remaining_analyses_array)} vcf files that were not downloaded and '
-                                   f'{len(analyses_array)} remaining to download')
+        raise UnfinishedBatchError(f'There are {len(analyses_array)} vcf files that were not downloaded')
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))

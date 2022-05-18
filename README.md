@@ -17,7 +17,7 @@ pip git+install https://github.com/EBIvariation/covid19dp-submission.git@v0.1.2
 ## Usage
 
 ``` 
-ingest_covid19dp_submission.py --project-dir /path/to/project/dir --num-analyses number/of/analysis/to/download --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
+ingest_covid19dp_submission.py --project-dir /path/to/project/dir/PRJEB45554  --num-analyses 10000 --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config"
 ```
 
 See [application configuration](covid19dp_submission/etc/example_app_config.yml) and [nextflow configuration](covid19dp_submission/etc/example_nextflow.config) examples. 
@@ -33,3 +33,12 @@ The above command will run the following steps (see [workflow definition](covid1
 * [Cluster the variants in the SARS-Cov-2](covid19dp_submission/steps/cluster_assembly.py) assembly in the accessioning warehouse.
 
 For usage in EBI cluster, see [here](https://www.ebi.ac.uk/panda/jira/browse/EVA-2495?focusedCommentId=366472&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-366472) (limited to EBI internal users only).
+
+
+For resuming a previous run
+
+```
+ingest_covid19dp_submission.py --project-dir /path/to/project/dir/PRJEB45554  --num-analyses 10000 --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config --resume <processing_directory_name>"
+```
+
+where the processing directory is formatted like 2022_05_18_11_00_41 inside the 30_eva_valid folder
