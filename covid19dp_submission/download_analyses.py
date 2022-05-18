@@ -16,7 +16,6 @@ import argparse
 import copy
 import glob
 import os
-import shutil
 import urllib
 
 import requests

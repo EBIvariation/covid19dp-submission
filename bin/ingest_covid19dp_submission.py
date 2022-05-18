@@ -40,7 +40,7 @@ def main():
 
     ingest_covid19dp_submission(args.project, args.project_dir, args.num_analyses,
                                 args.processed_analyses_file, args.app_config_file, args.nextflow_config_file,
-                                args.resume)
+                                args.resume_snapshot)
 
 
 if __name__ == "__main__":

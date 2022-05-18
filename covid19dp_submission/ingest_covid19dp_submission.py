@@ -27,7 +27,6 @@ from covid19dp_submission import NEXTFLOW_DIR
 from covid19dp_submission.download_analyses import download_analyses
 from covid19dp_submission.steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline import get_concat_result_file_name
 
-
 logger = logging_config.get_logger(__name__)
 
 
