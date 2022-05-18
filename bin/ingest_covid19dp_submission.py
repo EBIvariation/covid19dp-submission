@@ -32,7 +32,7 @@ def main():
                         help="Full path to the application config file (ex: /path/to/config.yml)", required=True)
     parser.add_argument("--nextflow-config-file",
                         help="Full path to the Nextflow config file", default=None, required=False)
-    parser.add_argument("--resume", type=str, required=False,
+    parser.add_argument("--resume-snapshot", type=str, required=False,
                         help="Resume a previous job. You need to specify the snapshot name to be resumed "
                              "(ex: 2021_06_28_14_28_56)")
     args = parser.parse_args()
