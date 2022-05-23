@@ -32,8 +32,6 @@ class TestIngestCovid19DPSubmission(TestCase):
         os.makedirs(self.processing_folder)
         self.download_target_dir = os.path.join(self.processing_folder, '30_eva_valid', self.snapshot_name)
         self.processed_analyses_file = os.path.join(self.processing_folder, 'processed_analyses_file.txt')
-
-
         self.accessioning_database_name = "eva_accession"
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
@@ -86,19 +84,17 @@ class TestIngestCovid19DPSubmission(TestCase):
             shutil.copy(os.path.join(self.resources_folder, 'vcf_files', f'file{i}.vcf'), self.download_target_dir)
         return self.download_target_dir
 
-
     def test_ingest_covid19dp_submission(self):
-        self.download_test_files()
-        ingest_covid19dp_submission(project=self.project, snapshot_name=self.snapshot_name,
-                                    project_dir=self.processing_folder, num_analyses=self.num_of_analyses,
+        ingest_covid19dp_submission(project=self.project,
+                                    project_dir=self.processing_folder, num_analyses=2,
                                     processed_analyses_file=self.processed_analyses_file,
                                     app_config_file=self.app_config_file,
-                                    nextflow_config_file=self.nextflow_config_file, resume=False)
+                                    nextflow_config_file=self.nextflow_config_file, resume=None)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
             .count_documents(filter={})
-        self.assertEqual(54, num_clustered_variants)
+        self.assertEqual(52, num_clustered_variants)
         # check if files are synchronized to the ftp dir
         self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
         num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
             .count_documents(filter={})
-        self.assertEqual(54, num_incremental_release_records)
+        self.assertEqual(52, num_incremental_release_records)

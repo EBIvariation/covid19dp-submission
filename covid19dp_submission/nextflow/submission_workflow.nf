@@ -122,6 +122,7 @@ process sync_accessions_to_public_ftp {
     
     script:
     """
+    mkdir -p $params.submission.public_ftp_dir
     (rsync -av $params.submission.accession_output_dir/* $params.submission.public_ftp_dir) \
     >> $params.submission.log_dir/sync_accessions_to_public_ftp.log 2>&1
     """

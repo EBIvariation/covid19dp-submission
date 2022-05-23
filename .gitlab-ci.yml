@@ -36,10 +36,16 @@ test:
     - pip install pytest certifi
     - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - python3 setup.py install
+    - curl https://d3gcli72yxqn2z.cloudfront.net/connect_latest/v4/bin/ibm-aspera-connect_4.1.3.93_linux.tar.gz -o ibm-aspera-connect.tar.gz
+    - tar xzf ibm-aspera-connect.tar.gz
+    - ./ibm-aspera-connect_*_linux.sh
+    - chmod +x ~/.aspera/connect/bin/ascp; ln -s ~/.aspera/connect/bin/ascp /usr/bin
     # reduce the default SSL security level to get around a misconfiguration in the Ensembl server
     # https://github.com/Ensembl/ensembl-rest/issues/427
     # See https://askubuntu.com/a/1233456
     - sed -i 's/DEFAULT@SECLEVEL=2/DEFAULT@SECLEVEL=1/' /usr/lib/ssl/openssl.cnf
+    - export ASPERA_ID_DSA=~/.aspera/connect/etc/asperaweb_id_dsa.openssh
+    - export NXF_DEFAULT_DSL=1
   script:
     - PYTHONPATH=. pytest tests
   environment:

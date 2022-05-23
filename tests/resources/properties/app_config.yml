@@ -3,6 +3,10 @@ executable:
   vcf_assembly_checker: vcf_assembly_checker_linux
   vcf_validator: vcf_validator_linux
   bcftools: bcftools
+  ascp_bin: ~/.aspera/connect/bin/ascp
+
+aspera:
+  aspera_id_dsa_key: ~/.aspera/connect/etc/asperaweb_id_dsa.openssh
 
 jar:
   accession_pipeline: {accession_jar_file}

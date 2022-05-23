@@ -14,16 +14,15 @@
 # limitations under the License.
 import argparse
 
+from ebi_eva_common_pyutils.logger import logging_config
+
 from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Ingest a snapshot submission from the Covid-19 data portal project',
-                                     formatter_class=argparse.RawTextHelpFormatter, add_help=False)
+    parser = argparse.ArgumentParser(description='Ingest a snapshot submission from the Covid-19 data portal project')
     parser.add_argument("--project", default='PRJEB45554', required=False,
                         help="project from which analyses needs to be downloaded")
-    parser.add_argument("--snapshot-name", help="Snapshot name (ex: 2021_06_28_14_28_56)", default=None,
-                        required=False)
     parser.add_argument("--project-dir", help="Project directory (ex: /path/to/PRJ)", default=None, required=True)
     parser.add_argument("--num-analyses", type=int, default=10000, required=False,
                         help="Number of analyses to download (max = 10000)")
@@ -33,13 +32,15 @@ def main():
                         help="Full path to the application config file (ex: /path/to/config.yml)", required=True)
     parser.add_argument("--nextflow-config-file",
                         help="Full path to the Nextflow config file", default=None, required=False)
-    parser.add_argument("--resume",
-                        help="Indicate if a previous concatenation job is to be resumed", action='store_true',
-                        required=False)
+    parser.add_argument("--resume-snapshot", type=str, required=False,
+                        help="Resume a previous job. You need to specify the snapshot name to be resumed "
+                             "(ex: 2021_06_28_14_28_56)")
     args = parser.parse_args()
-    ingest_covid19dp_submission(args.project, args.snapshot_name, args.project_dir, args.num_analyses,
+    logging_config.add_stdout_handler()
+
+    ingest_covid19dp_submission(args.project, args.project_dir, args.num_analyses,
                                 args.processed_analyses_file, args.app_config_file, args.nextflow_config_file,
-                                args.resume)
+                                args.resume_snapshot)
 
 
 if __name__ == "__main__":
