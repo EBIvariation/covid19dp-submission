@@ -17,7 +17,7 @@ pip git+install https://github.com/EBIvariation/covid19dp-submission.git@v0.1.2
 ## Usage
 
 ``` 
-ingest_covid19dp_submission.py --project-dir /path/to/project/dir/PRJEB45554  --num-analyses 10000 --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config"
+ingest_covid19dp_submission.py --project-dir /path/to/project/dir/PRJEB45554  --num-analyses 10000 --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config
 ```
 
 See [application configuration](covid19dp_submission/etc/example_app_config.yml) and [nextflow configuration](covid19dp_submission/etc/example_nextflow.config) examples. 
@@ -38,7 +38,7 @@ For usage in EBI cluster, see [here](https://www.ebi.ac.uk/panda/jira/browse/EVA
 For resuming a previous run
 
 ```
-ingest_covid19dp_submission.py --project-dir /path/to/project/dir/PRJEB45554  --num-analyses 10000 --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config --resume <processing_directory_name>"
+ingest_covid19dp_submission.py --project-dir /path/to/project/dir/PRJEB45554  --num-analyses 10000 --processed-analyses-file /file/containing/list/of/analyses/already/processed --app-config-file /path/to/app_config.yml --nextflow-config-file /path/to/nextflow.config --resume-snapshot <processing_directory_name>
 ```
 
 where the processing directory is formatted like 2022_05_18_11_00_41 inside the 30_eva_valid folder
