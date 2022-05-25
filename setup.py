@@ -25,5 +25,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3'
     ],
-    scripts=glob.glob(join(base_dir, 'bin', '*.py'))
+    scripts=[join(base_dir, 'bin', s) for s in ('ingest_covid19dp_submission.py', 'run_ingestion.sh',
+                                                'run_ingestion_cron.sh')]
 )
