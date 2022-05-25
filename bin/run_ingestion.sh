@@ -72,7 +72,7 @@ To: ${email_recipient}
 Subject: COVID19 Data Processing batch ${current_date} completed successfully
 
 Accessioning/Clustering of 10,000 new COVID19 samples started in ${current_date} is now complete.
-The total number of sample processed is ${nb_processed}
+The total number of samples processed is ${nb_processed}
 EOF
   cat ${processing_dir}/email | sendmail ${email_recipient}
 else
