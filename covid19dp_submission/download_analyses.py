@@ -145,7 +145,6 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
 def download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
                               batch_size=100):
     logger.info(f"total number of files to download: {len(analyses_array)}")
-    print(f'{len(analyses_array)} analysis')
     with open(processed_analyses_file, 'a') as open_file:
         # This copy won't change throughout the iteration
         for analysis_batch in chunked(copy.copy(analyses_array), batch_size):

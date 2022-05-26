@@ -92,9 +92,9 @@ class TestIngestCovid19DPSubmission(TestCase):
                                     nextflow_config_file=self.nextflow_config_file, resume=None)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
             .count_documents(filter={})
-        self.assertEqual(52, num_clustered_variants)
+        self.assertEqual(50, num_clustered_variants)
         # check if files are synchronized to the ftp dir
         self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
         num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
             .count_documents(filter={})
-        self.assertEqual(52, num_incremental_release_records)
+        self.assertEqual(50, num_incremental_release_records)
