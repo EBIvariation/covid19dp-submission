@@ -3,7 +3,7 @@
 #email_recipient=***********
 #eva_dir=**************
 # Grab the variables from a config bash script
-source ~/.covid19dp_processing 2> /dev/null
+source ~/.covid19dp_processing
 
 if [ -z "${email_recipient}" ] || [ -z "${eva_dir}" ];
 then
@@ -15,6 +15,8 @@ tmp_dir=${eva_dir}/scratch
 software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
 project_dir=${eva_dir}/data/PRJEB45554
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
+number_to_process=10000
+
 
 #Check if the previous process is still running
 if [[ -e ${lock_file} ]];
@@ -42,18 +44,22 @@ then
 fi
 
 processing_dir=${valid_dir}/${current_date}
+log_dir=${project_dir}/00_logs/${current_date}
+public_dir=${project_dir}/60_eva_public/${current_date}
 
 echo ${current_date} > ${lock_file}
 # Ensure that the lock file is delete on exit of the script
 trap 'rm ${lock_file}' EXIT
 
-mkdir -p ${processing_dir}
+# Need to create the directories because we're using resume from the first execution so they won't be created by
+# ingest_covid19dp_submission.py
+mkdir -p ${processing_dir} ${log_dir} ${public_dir}
 export TMPDIR=${tmp_dir}
 
 ${software_dir}/production/bin/ingest_covid19dp_submission.py \
   --project-dir ${project_dir} --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \
-  --processed-analyses-file ${project_dir}/processed_analysis.txt --num-analyses 10000 \
+  --processed-analyses-file ${project_dir}/processed_analysis.txt --num-analyses ${number_to_process} \
   --resume-snapshot ${current_date} \
   >> ${processing_dir}/ingest_covid19dp.log \
   2>> ${processing_dir}/ingest_covid19dp.err
@@ -71,7 +77,7 @@ From: eva-noreply@ebi.ac.uk
 To: ${email_recipient}
 Subject: COVID19 Data Processing batch ${current_date} completed successfully
 
-Accessioning/Clustering of 10,000 new COVID19 samples started in ${current_date} is now complete.
+Accessioning/Clustering of ${number_to_process} new COVID19 samples started in ${current_date} is now complete.
 The total number of samples processed is ${nb_processed}
 EOF
   cat ${processing_dir}/email | sendmail ${email_recipient}

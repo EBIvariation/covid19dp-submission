@@ -2,9 +2,9 @@
 
 #email_recipient=***********
 # Grab the variables from a config bash script
-source ~/.covid19dp_processing 2> /dev/null
+source ~/.covid19dp_processing
 
-if [ -z "${email_recipient}" ] ;
+if [ -z "${eva_dir}" ] ;
 then
   echo "run_ingestion.sh does not have access to eva_dir variable. Please set it above or populate ~/.covid19dp_processing"
   exit 1
