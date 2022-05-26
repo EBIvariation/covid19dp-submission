@@ -48,13 +48,13 @@ class TestDownloadSnapshot(TestCase):
     def test_download_analyses(self):
         data = self.get_processed_files_data()
         self.create_processed_analysis_file(data)
-        ascp_bin = os.path.expanduser("ascp")
+        ascp_bin = "ascp"
         aspera_id_dsa_key = os.environ['ASPERA_ID_DSA']
         download_analyses(project=self.project, num_analyses=self.num_analyses_to_download,
                           processed_analyses_file=self.processed_analyses_file,
                           download_target_dir=self.download_target_dir, ascp=ascp_bin,
                           aspera_id_dsa=aspera_id_dsa_key, batch_size=100)
-        vcf_files = glob.glob(f"{self.download_target_dir}/*.vcf")
+        vcf_files = glob.glob(f"{self.download_target_dir}/*.vcf") + glob.glob(f"{self.download_target_dir}/*.vcf.gz")
         self.assertEqual(self.num_analyses_to_download, len(vcf_files))
         self.check_processed_analysis_file(len(data) + self.num_analyses_to_download)
 
