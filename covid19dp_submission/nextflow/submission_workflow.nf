@@ -1,8 +1,15 @@
+
+Channel.fromPath("$params.submission.download_file_list")
+       .splitCsv(header:false)
+       .map(row -> row[0])
+       .buffer( size:params.batch_size, remainder: true )
+       .set{vcf_files_list}
+
+
 process validate_vcfs {
-    Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
-    
+
     input:
-    val vcf_file from vcf_file_list
+    path vcf_files from vcf_files_list
     
     output:
     val true into validate_vcfs_success
@@ -12,7 +19,7 @@ process validate_vcfs {
     export PYTHONPATH="$params.executable.python.script_path"
     ($params.executable.python.interpreter \
         -m steps.run_vcf_validator \
-        --vcf-file $params.submission.download_target_dir/$vcf_file \
+        --vcf-file vcf_files*.vcf \
         --validator-binary $params.executable.vcf_validator \
         --output-dir $params.submission.validation_dir \
     ) >> $params.submission.log_dir/validate_vcfs.log 2>&1
@@ -20,10 +27,9 @@ process validate_vcfs {
 }
 
 process asm_check_vcfs {
-    Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
 
     input:
-    val vcf_file from vcf_file_list
+    path vcf_files from vcf_files_list
 
     output:
     val true into asm_check_vcfs_success
@@ -33,7 +39,7 @@ process asm_check_vcfs {
     export PYTHONPATH="$params.executable.python.script_path"
     ($params.executable.python.interpreter \
         -m steps.run_asm_checker \
-        --vcf-file $params.submission.download_target_dir/$vcf_file \
+        --vcf-file vcf_files*.vcf \
         --assembly-checker-binary $params.executable.vcf_assembly_checker \
         --assembly-report $params.submission.assembly_report \
         --assembly-fasta $params.submission.assembly_fasta \
@@ -43,12 +49,11 @@ process asm_check_vcfs {
 }
 
 process bgzip_and_index {
-    Channel.fromPath("$params.submission.download_file_list").splitCsv(header:false).map(row -> row[0]).set{vcf_file_list}
-    
+
     input:
     val flag1 from validate_vcfs_success.collect()
     val flag2 from asm_check_vcfs_success.collect()
-    val vcf_file from vcf_file_list
+    path vcf_files from vcf_files_list
     
     output:
     val true into bgzip_and_index_success
@@ -58,7 +63,8 @@ process bgzip_and_index {
     export PYTHONPATH="$params.executable.python.script_path"
     ($params.executable.python.interpreter \
         -m steps.bgzip_and_index_vcf \
-        --vcf-file $params.submission.download_target_dir/$vcf_file \
+        --vcf-file vcf_files*.vcf \
+        --output-dir $params.submission.download_target_dir \
         --bcftools-binary $params.executable.bcftools \
     ) >> $params.submission.log_dir/bgzip_and_index_vcfs.log 2>&1
     """
