@@ -33,12 +33,12 @@ def bgzip_and_index(vcf_file: str, output_file, bcftools_binary: str) -> str:
     if vcf_file.endswith('.gz'):
         decompression_required = True
     commands = [
-        f'gunzip -c {vcf_file} > {vcf_file_name_no_ext}.vcf' if decompression_required else '',
+        f'gunzip -c {vcf_file} > {vcf_file_name_no_ext}.vcf' if decompression_required else ':',
         f'{bcftools_binary} convert {vcf_file_name_no_ext}.vcf -O z -o {output_file}',
-        f'{bcftools_binary} index -f --csi {output_file}'
-        f'rm -rf {vcf_file_name_no_ext}.vcf' if decompression_required else ''
+        f'{bcftools_binary} index -f --csi {output_file}',
+        f'rm -rf {vcf_file_name_no_ext}.vcf' if decompression_required else ':'
     ]
-    bgzip_and_index_command = '\n'.join(commands)
+    bgzip_and_index_command = ' && '.join(commands)
     run_command_with_output(f"BGZipping and indexing {vcf_file_name_no_ext_and_path}...", bgzip_and_index_command)
     return f"{vcf_file_name_no_ext}.vcf.gz"
 
