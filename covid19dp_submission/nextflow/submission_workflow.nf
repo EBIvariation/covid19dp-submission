@@ -1,18 +1,12 @@
-
-Channel.fromPath("$params.submission.download_file_list")
-       .splitCsv(header:false)
-       .map(row -> row[0])
-       .buffer( size:params.submission.batch_size, remainder: true )
-       .into{vcf_files_list1; vcf_files_list2; vcf_files_list3}
-
+nextflow.enable.dsl=2
 
 process validate_vcfs {
 
     input:
-    path vcf_files from vcf_files_list1
+    path vcf_files
     
     output:
-    val true into validate_vcfs_success
+    val true, emit: validate_vcfs_success
     
     script:
     """
@@ -29,10 +23,10 @@ process validate_vcfs {
 process asm_check_vcfs {
 
     input:
-    path vcf_files from vcf_files_list2
+    path vcf_files
 
     output:
-    val true into asm_check_vcfs_success
+    val true, emit: asm_check_vcfs_success
 
     script:
     """
@@ -51,12 +45,12 @@ process asm_check_vcfs {
 process bgzip_and_index {
 
     input:
-    val flag1 from validate_vcfs_success.collect()
-    val flag2 from asm_check_vcfs_success.collect()
-    path vcf_files from vcf_files_list3
+    val flag1
+    val flag2
+    path vcf_files
     
     output:
-    val true into bgzip_and_index_success
+    val true, emit: bgzip_and_index_success
     
     script:
     """
@@ -72,10 +66,10 @@ process bgzip_and_index {
 
 process vertical_concat {
     input:
-    val flag from bgzip_and_index_success.collect()
+    val flag
     
     output:
-    val true into vertical_concat_success
+    val true, emit: vertical_concat_success
     
     script:
     """
@@ -96,10 +90,10 @@ process accession_vcf {
     clusterOptions "-g /accession/$params.submission.accessioning_instance"
     
     input:
-    val flag from vertical_concat_success
+    val flag
     
     output:
-    val true into accession_vcf_success
+    val true, emit: accession_vcf_success
     
     script:
     //Accessioning properties file passed via command line should already be populated with project and assembly accessions
@@ -121,10 +115,10 @@ process sync_accessions_to_public_ftp {
     label 'datamover'
 
     input:
-    val flag from accession_vcf_success
+    val flag
     
     output:
-    val true into sync_accessions_to_public_ftp_success
+    val true, emit: sync_accessions_to_public_ftp_success
     
     script:
     """
@@ -138,10 +132,10 @@ process cluster_assembly {
     clusterOptions "-g /accession/$params.submission.clustering_instance"
 
     input:
-    val flag from accession_vcf_success
+    val flag
     
     output:
-    val true into cluster_assembly_success
+    val true, emit: cluster_assembly_success
     
     script:
     //Clustering properties file passed via command line should already be populated with project and assembly accessions
@@ -159,10 +153,10 @@ process cluster_assembly {
 process incremental_release {
 
     input:
-    val flag from cluster_assembly_success
+    val flag
 
     output:
-    val true into incremental_release_success
+    val true, emit: incremental_release_success
 
     // Due to the particularly memory-intensive nature of the incremental release process (owing to in-memory joins),
     // ensure that this number is at least 32 in real-world scenarios
@@ -175,4 +169,19 @@ process incremental_release {
     --parameters.accessionedVcf="${params.submission.accession_output_file}.gz"
     )  >> $params.submission.log_dir/incremental_release.log 2>&1
     """
+}
+
+workflow  {
+    main:
+        Channel.fromPath("$params.submission.download_file_list")
+               .splitCsv(header:false)
+               .map(row -> row[0])
+               .buffer( size:params.submission.batch_size, remainder: true )
+               .set{vcf_files_list}
+        validate_vcfs(vcf_files_list)
+        asm_check_vcfs(vcf_files_list)
+        bgzip_and_index(validate_vcfs.out.validate_vcfs_success, asm_check_vcfs.out.asm_check_vcfs_success, vcf_files_list)
+
+        vertical_concat(bgzip_and_index.out.bgzip_and_index_success.collect()) | \
+        accession_vcf | sync_accessions_to_public_ftp | cluster_assembly | incremental_release
 }
