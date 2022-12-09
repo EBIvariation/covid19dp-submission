@@ -90,8 +90,8 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
 
     config = _get_config(snapshot_name, project_dir, nextflow_config_file, app_config_file)
     # Add default processing batch size
-    if 'bath_size' not in config:
-        config['bath_size'] = 100
+    if 'batch_size' not in config['submission']:
+        config['submission']['batch_size'] = 100
     if process_new_snapshot:
         _create_required_dirs(config)
     else:
