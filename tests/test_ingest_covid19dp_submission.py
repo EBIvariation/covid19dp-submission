@@ -9,6 +9,7 @@ from ebi_eva_common_pyutils.command_utils import run_command_with_output
 
 from covid19dp_submission import ROOT_DIR
 from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_submission
+from tests.test_accession_and_clustering import fill_properties_with_dict
 
 
 class TestIngestCovid19DPSubmission(TestCase):
@@ -39,15 +40,22 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.app_config_file = os.path.join(self.processing_folder, 'app_config.yml')
         self.mongo_host = os.getenv('MONGO_HOST', 'localhost')
         self.postgres_host = os.getenv('POSTGRES_HOST', 'localhost')
-        accessioning_properties = open(os.path.join(self.resources_folder, 'properties', 'accessioning.properties'))\
-            .read().format(**self.__dict__)
-        clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
-            .read().format(**self.__dict__)
-        release_properties = open(os.path.join(self.resources_folder, 'properties', 'release.properties')) \
-            .read().format(**self.__dict__)
-        open(self.accessioning_properties_file, "w").write(accessioning_properties)
-        open(self.clustering_properties_file, "w").write(clustering_properties)
-        open(self.release_properties_file, "w").write(release_properties)
+        self.eva_stats_password = os.getenv('EVA_STATS_DEV_PASSWORD', 'password')
+        fill_properties_with_dict(
+            os.path.join(self.resources_folder, 'properties', 'accessioning.properties'),
+            self.accessioning_properties_file,
+            self.__dict__
+        )
+        fill_properties_with_dict(
+            os.path.join(self.resources_folder, 'properties', 'clustering.properties'),
+            self.clustering_properties_file,
+            self.__dict__
+        )
+        fill_properties_with_dict(
+            os.path.join(self.resources_folder, 'properties', 'release.properties'),
+            self.release_properties_file,
+            self.__dict__
+        )
 
     def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",

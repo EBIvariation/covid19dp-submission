@@ -80,7 +80,7 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
 
 def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int,
                                 processed_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
-                                resume: str):
+                                resume: str or None):
     process_new_snapshot = False
     if resume is None:
         snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
