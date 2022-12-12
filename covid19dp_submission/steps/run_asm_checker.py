@@ -35,9 +35,9 @@ def run_asm_checker(vcf_files: list, assembly_checker_binary: str, assembly_repo
                     output_dir: str) -> None:
     os.makedirs(name=output_dir, exist_ok=True)
     for vcf_file in vcf_files:
-        assembly_check__output_prefix = os.path.basename(vcf_file)
+        assembly_check_output_prefix = os.path.basename(vcf_file)
         # This log file captures the status of the overall validation process
-        process_log_file_name = f"{output_dir}/{assembly_check__output_prefix}.assembly_check.log"
+        process_log_file_name = f"{output_dir}/{assembly_check_output_prefix}.assembly_check.log"
 
         if should_skip_asm_check(vcf_file):
             logger.info(f"VCF file {vcf_file} does not have any variants. Skipping assembly check...")

@@ -25,7 +25,7 @@ def _get_vcf_filename_without_extension(vcf_file_name: str) -> str:
     return vcf_file_name.replace(".vcf.gz", "").replace(".vcf", "")
 
 
-def bgzip_and_index(vcf_file: str, output_file, bcftools_binary: str) -> str:
+def bgzip_and_index(vcf_file: str, output_file: str, bcftools_binary: str) -> str:
     vcf_file_name_no_ext = _get_vcf_filename_without_extension(vcf_file)
     vcf_file_name_no_ext_and_path = os.path.basename(vcf_file_name_no_ext)
     decompression_required = False
