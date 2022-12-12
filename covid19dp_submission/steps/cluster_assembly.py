@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import os
 
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
@@ -22,9 +23,11 @@ logger = logging_config.get_logger(__name__)
 
 def cluster_assembly(clustering_jar_file: str, clustering_properties_file: str, accessioning_instance: str,
                      memory: int) -> None:
+    eva_stat_pass = os.environ.get('EVA_STATS_DEV_PASSWORD', 'password')
     clustering_command = f"java -Xmx{memory}g -jar {clustering_jar_file} " \
                          f"--spring.config.location={clustering_properties_file} " \
-                         f"--accessioning.instanceId={accessioning_instance}"
+                         f"--accessioning.instanceId={accessioning_instance} " \
+                         f"--eva.count-stats.password={eva_stat_pass}"
     run_command_with_output(f"Running clustering with properties file: {clustering_properties_file}...",
                             clustering_command)
 

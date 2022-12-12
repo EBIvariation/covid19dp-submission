@@ -68,6 +68,8 @@ jobs:
         ./ibm-aspera-connect_*_linux.sh
         chmod +x ~/.aspera/connect/bin/ascp; sudo ln -s ~/.aspera/connect/bin/ascp /usr/bin
     - name: Test with pytest
+      env:
+        EVA_STATS_DEV_PASSWORD: ${{ secrets.EVA_STATS_DEV_PASSWORD }}
       run: |
         export ASPERA_ID_DSA=~/.aspera/connect/etc/asperaweb_id_dsa.openssh
         PYTHONPATH=. pytest tests
