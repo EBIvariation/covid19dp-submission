@@ -42,7 +42,7 @@ class TestAccessionVcf(TestCase):
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accession_config.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
         fill_properties_with_dict(
-            os.path.join( self.resources_folder, 'properties', 'accessioning.properties'),
+            os.path.join(self.resources_folder, 'properties', 'accessioning.properties'),
             self.accessioning_properties_file,
             self.__dict__
         )
@@ -52,7 +52,6 @@ class TestAccessionVcf(TestCase):
             self.__dict__
         )
 
-
     def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",
                                 f'bash -c '
@@ -61,7 +60,7 @@ class TestAccessionVcf(TestCase):
                                 f'&& cd eva-accession && mvn -q package -DskipTests '
                                 f'&& cp eva-accession-pipeline/target/*.jar '
                                 f'{self.processing_folder} '
-                                f'&& cp eva-accession-clustering/target/*.jar '
+                                f'&& cp eva-accession-clustering/target/*exec*.jar '
                                 f'{self.processing_folder} '
                                 f'&& cd {self.processing_folder} && rm -rf eva-accession"')
         self.accession_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-pipeline*.jar")[0]
@@ -74,7 +73,6 @@ class TestAccessionVcf(TestCase):
         shutil.rmtree(self.download_folder, ignore_errors=True)
         shutil.rmtree(self.processing_folder, ignore_errors=True)
         self.mongo_db.drop_database(self.accessioning_database_name)
-
 
     def download_test_files(self):
         os.makedirs(self.download_target_dir)

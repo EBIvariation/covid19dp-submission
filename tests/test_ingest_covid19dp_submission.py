@@ -65,7 +65,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                 f'&& cd eva-accession && mvn -q package -DskipTests '
                                 f'&& cp eva-accession-pipeline/target/*.jar '
                                 f'{self.processing_folder} '
-                                f'&& cp eva-accession-clustering/target/*.jar '
+                                f'&& cp eva-accession-clustering/target/*exec*.jar '
                                 f'{self.processing_folder} '
                                 f'&& cp eva-accession-release/target/*.jar '
                                 f'{self.processing_folder} '
@@ -102,7 +102,7 @@ class TestIngestCovid19DPSubmission(TestCase):
             .count_documents(filter={})
         self.assertEqual(50, num_clustered_variants)
         # check if files are synchronized to the ftp dir
-        self.assertEqual(2, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
+        self.assertEqual(3, len(glob.glob(f"{self.app_config['submission']['public_ftp_dir']}/*")))
         num_incremental_release_records = self.mongo_db[self.accessioning_database_name]['releaseRecordEntity']\
             .count_documents(filter={})
         self.assertEqual(50, num_incremental_release_records)
