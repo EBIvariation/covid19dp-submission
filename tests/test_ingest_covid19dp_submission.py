@@ -65,7 +65,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                 f'&& cd eva-accession && mvn -q package -DskipTests '
                                 f'&& cp eva-accession-pipeline/target/*.jar '
                                 f'{self.processing_folder} '
-                                f'&& cp eva-accession-clustering/target/*.jar '
+                                f'&& cp eva-accession-clustering/target/*exec*.jar '
                                 f'{self.processing_folder} '
                                 f'&& cp eva-accession-release/target/*.jar '
                                 f'{self.processing_folder} '
