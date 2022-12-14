@@ -31,29 +31,30 @@ def should_skip_asm_check(vcf_file: str) -> bool:
                                        return_process_output=True)) == 0
 
 
-def run_asm_checker(vcf_file: str, assembly_checker_binary: str, assembly_report: str, assembly_fasta: str,
+def run_asm_checker(vcf_files: list, assembly_checker_binary: str, assembly_report: str, assembly_fasta: str,
                     output_dir: str) -> None:
     os.makedirs(name=output_dir, exist_ok=True)
-    assembly_check__output_prefix = os.path.basename(vcf_file)
-    # This log file captures the status of the overall validation process
-    process_log_file_name = f"{output_dir}/{assembly_check__output_prefix}.assembly_check.log"
+    for vcf_file in vcf_files:
+        assembly_check_output_prefix = os.path.basename(vcf_file)
+        # This log file captures the status of the overall validation process
+        process_log_file_name = f"{output_dir}/{assembly_check_output_prefix}.assembly_check.log"
 
-    if should_skip_asm_check(vcf_file):
-        logger.info(f"VCF file {vcf_file} does not have any variants. Skipping assembly check...")
-        sys.exit(0)
-    run_command_with_output(f"Assembly checking VCF file {vcf_file}...",
-                            f'bash -c "{assembly_checker_binary} -i {vcf_file}  '
-                            f'-f {assembly_fasta} '
-                            f'-a {assembly_report} '
-                            f'-r summary,text,valid '
-                            f'-o {output_dir} '
-                            f'--require-genbank > {process_log_file_name} 2>&1"')
+        if should_skip_asm_check(vcf_file):
+            logger.info(f"VCF file {vcf_file} does not have any variants. Skipping assembly check...")
+            sys.exit(0)
+        run_command_with_output(f"Assembly checking VCF file {vcf_file}...",
+                                f'bash -c "{assembly_checker_binary} -i {vcf_file}  '
+                                f'-f {assembly_fasta} '
+                                f'-a {assembly_report} '
+                                f'-r summary,text,valid '
+                                f'-o {output_dir} '
+                                f'--require-genbank > {process_log_file_name} 2>&1"')
 
 
 def main():
     parser = argparse.ArgumentParser(description='Assembly check a VCF file',
                                      formatter_class=argparse.RawTextHelpFormatter, add_help=False)
-    parser.add_argument("--vcf-file", help="Full path to the VCF file", required=True)
+    parser.add_argument("--vcf-file", help="Full path to the VCF file", nargs='+', required=True)
     parser.add_argument("--assembly-checker-binary", help="Full path to the assembly checker binary",
                         default="vcf_assembly_checker", required=False)
     parser.add_argument("--assembly-report", help="Full path to the assembly report", required=True)

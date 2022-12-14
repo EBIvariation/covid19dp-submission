@@ -35,7 +35,7 @@ class TestVCFVerticalConcat(TestCase):
     def test_concat_uninterrupted(self):
         download_target_dir = self.download_test_files()
         for vcf_file in glob.glob(f"{download_target_dir}/*.vcf"):
-            bgzip_and_index(vcf_file, "bcftools")
+            bgzip_and_index(vcf_file, vcf_file + '.gz',  "bcftools")
         #   s0.vcf.gz   s1.vcf.gz   s2.vcf.gz   s3.vcf.gz   s4.vcf.gz
         #       \           /           \           /
         #        s01.vcf.gz               s23.vcf.gz        s4.vcf.gz       <-------- Stage 0

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [1.8]
+        java-version: [1.11]
         python-version: [3.8]
         vcf-validator-version: [0.9.4]
         mongo-version: [4.0.21]
@@ -68,9 +68,10 @@ jobs:
         ./ibm-aspera-connect_*_linux.sh
         chmod +x ~/.aspera/connect/bin/ascp; sudo ln -s ~/.aspera/connect/bin/ascp /usr/bin
     - name: Test with pytest
+      env:
+        EVA_STATS_DEV_PASSWORD: ${{ secrets.EVA_STATS_DEV_PASSWORD }}
       run: |
         export ASPERA_ID_DSA=~/.aspera/connect/etc/asperaweb_id_dsa.openssh
-        export NXF_DEFAULT_DSL=1
         PYTHONPATH=. pytest tests
     - name: Test bash script
       run: |

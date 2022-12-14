@@ -31,7 +31,7 @@ logger = logging_config.get_logger(__name__)
 
 
 def get_analyses_file_list(download_target_dir: str) -> List[str]:
-    return sorted([os.path.basename(member) for member in os.listdir(download_target_dir)
+    return sorted([os.path.join(download_target_dir, member) for member in os.listdir(download_target_dir)
                    if member.lower().endswith(".vcf") or member.lower().endswith(".vcf.gz")])
 
 
@@ -80,7 +80,7 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
 
 def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int,
                                 processed_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
-                                resume: str):
+                                resume: str or None):
     process_new_snapshot = False
     if resume is None:
         snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
@@ -89,7 +89,9 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
         snapshot_name = resume
 
     config = _get_config(snapshot_name, project_dir, nextflow_config_file, app_config_file)
-
+    # Add default processing batch size
+    if 'batch_size' not in config['submission']:
+        config['submission']['batch_size'] = 100
     if process_new_snapshot:
         _create_required_dirs(config)
     else:
@@ -105,9 +107,11 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     else:
         logger.info(f'All {num_analyses} analysis have been downloaded already. Skipping.')
     vcf_files_to_be_downloaded = create_download_file_list(config)
-    config['submission']['concat_result_file'] = \
-        get_concat_result_file_name(config['submission']['concat_processing_dir'], len(vcf_files_to_be_downloaded),
-                                    config['submission']['concat_chunk_size'])
+    config['submission']['concat_result_file'] = get_concat_result_file_name(
+        config['submission']['concat_processing_dir'],
+        len(vcf_files_to_be_downloaded),
+        config['submission']['concat_chunk_size']
+    )
 
     nextflow_file_to_run = os.path.join(NEXTFLOW_DIR, 'submission_workflow.nf')
     yaml.safe_dump(config, open(config['executable']['nextflow_param_file'], "w"))

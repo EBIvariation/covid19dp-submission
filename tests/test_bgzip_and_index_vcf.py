@@ -26,6 +26,7 @@ class TestBGZipAndIndex(TestCase):
     def test_bgzip_and_index(self):
         download_dir = self.download_test_files()
         vcf_files = glob.glob(f"{download_dir}/*.vcf")
-        bgzip_and_index(vcf_file=vcf_files[0], bcftools_binary="bcftools")
-        self.assertTrue(os.path.exists(f"{vcf_files[0]}.gz"))
-        self.assertEqual(1, len(glob.glob(f"{vcf_files[0]}.gz.csi")))
+        output_file = f"{vcf_files[0]}.gz"
+        bgzip_and_index(vcf_file=vcf_files[0], output_file=output_file, bcftools_binary="bcftools")
+        self.assertTrue(os.path.exists(output_file))
+        self.assertEqual(1, len(glob.glob(f"{output_file}.csi")))

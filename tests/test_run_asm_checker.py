@@ -30,7 +30,7 @@ class TestRunAsmChecker(TestCase):
 
     def test_asm_check_successful(self):
         file_that_should_not_generate_error = f"{self.vcf_files_folder}/file1.vcf"
-        run_asm_checker(vcf_file=file_that_should_not_generate_error,
+        run_asm_checker(vcf_files=[file_that_should_not_generate_error],
                         assembly_checker_binary="vcf_assembly_checker_linux",
                         assembly_report=self.assembly_report_url, assembly_fasta=self.fasta_file,
                         output_dir=self.asm_check_test_run_folder)
@@ -46,7 +46,7 @@ class TestRunAsmChecker(TestCase):
         # File has 3 variants out of 15 (20%) that will not match the reference assembly
         file_that_should_generate_error = f"{self.vcf_files_folder}/file_that_will_fail_asm_check.vcf.gz"
         with self.assertRaises(subprocess.CalledProcessError) as exit_exception:
-            run_asm_checker(vcf_file=file_that_should_generate_error,
+            run_asm_checker(vcf_files=[file_that_should_generate_error],
                             assembly_checker_binary="vcf_assembly_checker_linux",
                             assembly_report=self.assembly_report_url, assembly_fasta=self.fasta_file,
                             output_dir=self.asm_check_test_run_folder)

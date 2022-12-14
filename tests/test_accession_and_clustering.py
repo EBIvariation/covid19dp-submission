@@ -10,6 +10,14 @@ from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from unittest import TestCase
 
 
+def fill_properties_with_dict(properties_in, properties_out, context_dict):
+    with open(properties_in) as open_file:
+        properties = open_file.read().format(**context_dict)
+    with open(properties_out, "w") as open_file:
+        open_file.write(properties)
+    return properties
+
+
 class TestAccessionVcf(TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -30,14 +38,20 @@ class TestAccessionVcf(TestCase):
         self.accessioning_database_name = "eva_accession"
         self.mongo_host = os.getenv('MONGO_HOST', 'localhost')
         self.postgres_host = os.getenv('POSTGRES_HOST', 'localhost')
+        self.eva_stats_password = os.getenv('EVA_STATS_DEV_PASSWORD', 'password')
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accession_config.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
-        self.accessioning_properties = open(os.path.join(self.resources_folder, 'properties',
-                                                         'accessioning.properties')).read().format(**self.__dict__)
-        self.clustering_properties = open(os.path.join(self.resources_folder, 'properties', 'clustering.properties'))\
-            .read().format(**self.__dict__)
-        open(self.accessioning_properties_file, "w").write(self.accessioning_properties)
-        open(self.clustering_properties_file, "w").write(self.clustering_properties)
+        fill_properties_with_dict(
+            os.path.join( self.resources_folder, 'properties', 'accessioning.properties'),
+            self.accessioning_properties_file,
+            self.__dict__
+        )
+        fill_properties_with_dict(
+            os.path.join(self.resources_folder, 'properties', 'clustering.properties'),
+            self.clustering_properties_file,
+            self.__dict__
+        )
+
 
     def setUp(self) -> None:
         run_command_with_output("Downloading accessioning JAR file...",
