@@ -77,8 +77,8 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
         logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
         analyses_from_ena = get_analyses_from_ena(project, offset, limit)
         unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
-        add_to_ignored_file([a for a in analyses_from_ena if a.get('tax_id') not in accepted_taxonomies], ignored_analysis_file)
-        analyses_from_ena = [a for a in analyses_from_ena if a.get('tax_id') in accepted_taxonomies]
+        add_to_ignored_file([a for a in analyses_from_ena if int(a.get('tax_id')) not in accepted_taxonomies], ignored_analysis_file)
+        analyses_from_ena = [a for a in analyses_from_ena if int(a.get('tax_id')) in accepted_taxonomies]
         logger.info(
             f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
 
