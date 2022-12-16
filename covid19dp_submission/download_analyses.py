@@ -71,7 +71,7 @@ def total_analyses_in_project(project):
 def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies):
     offset = 0
     limit = 100000
-    analysis_to_skip = get_analyses_from_file(processed_analyses_file) + get_analyses_from_file(ignored_analysis_file)
+    analysis_to_skip = get_analyses_from_file(processed_analyses_file).union(get_analyses_from_file(ignored_analysis_file))
     analyses_for_processing = []
     while offset < total_analyses:
         logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
