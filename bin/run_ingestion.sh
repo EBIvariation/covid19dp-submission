@@ -59,7 +59,9 @@ export TMPDIR=${tmp_dir}
 ${software_dir}/production/bin/ingest_covid19dp_submission.py \
   --project-dir ${project_dir} --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \
-  --processed-analyses-file ${project_dir}/processed_analysis.txt --num-analyses ${number_to_process} \
+  --processed-analyses-file ${project_dir}/processed_analysis.txt \
+  --ignored-analyses-file ${project_dir}/ignored_analysis.txt \
+  --num-analyses ${number_to_process} \
   --resume-snapshot ${current_date} \
   >> ${processing_dir}/ingest_covid19dp.log \
   2>> ${processing_dir}/ingest_covid19dp.err

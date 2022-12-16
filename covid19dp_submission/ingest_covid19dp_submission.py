@@ -78,8 +78,8 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
     return config
 
 
-def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int,
-                                processed_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
+def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int, processed_analyses_file: str,
+                                ignored_analyses_file: str, app_config_file: str, nextflow_config_file: str or None,
                                 resume: str or None):
     process_new_snapshot = False
     if resume is None:
@@ -102,8 +102,9 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     list_file = get_analyses_file_list(config['submission']['download_target_dir'])
     if len(list_file) < num_analyses:
         num_analyses = num_analyses - len(list_file)
-        download_analyses(project, num_analyses, processed_analyses_file, config['submission']['download_target_dir'],
-                          config['executable']['ascp_bin'], config['aspera']['aspera_id_dsa_key'], config.get('download_batch_size', 100))
+        download_analyses(project, num_analyses, processed_analyses_file, ignored_analyses_file,
+                          config['submission']['download_target_dir'], config['executable']['ascp_bin'],
+                          config['aspera']['aspera_id_dsa_key'], config.get('download_batch_size', 100))
     else:
         logger.info(f'All {num_analyses} analysis have been downloaded already. Skipping.')
     vcf_files_to_be_downloaded = create_download_file_list(config)

@@ -31,13 +31,14 @@ class UnfinishedBatchError(Exception):
     pass
 
 
-def download_analyses(project, num_analyses, processed_analyses_file, download_target_dir, ascp, aspera_id_dsa,
+def download_analyses(project, num_analyses, processed_analyses_file, ignored_analysis_file, download_target_dir, ascp, aspera_id_dsa,
                       batch_size=100):
     total_analyses = total_analyses_in_project(project)
     logger.info(f"total analyses in project {project}: {total_analyses}")
 
-    analyses_array = get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file)
+    analyses_array = get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file)
     logger.info(f"number of analyses to process: {len(analyses_array)}")
+
 
     os.makedirs(download_target_dir, exist_ok=True)
     # Sending a shallow copy of the analyses_array because it will be modified during the download to accommodate
@@ -67,15 +68,15 @@ def total_analyses_in_project(project):
     return response.json()
 
 
-def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file):
+def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file):
     offset = 0
     limit = 100000
-    processed_analyses = get_processed_analyses(processed_analyses_file)
+    analysis_to_skip = get_analyses_from_file(processed_analyses_file) + get_analyses_from_file(ignored_analysis_file)
     analyses_for_processing = []
     while offset < total_analyses:
         logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
         analyses_from_ena = get_analyses_from_ena(project, offset, limit)
-        unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, processed_analyses)
+        unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
         logger.info(
             f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
 
@@ -114,13 +115,13 @@ def filter_out_processed_analyses(analyses_array, processed_analyses):
     return unprocessed_analyses
 
 
-def get_processed_analyses(processed_analyses_file):
-    processed_analyses = set()
+def get_analyses_from_file(processed_analyses_file):
+    analyses_set = set()
     if os.path.isfile(processed_analyses_file):
         with open(processed_analyses_file, 'r') as file:
             for line in file:
-                processed_analyses.add(line.split(",")[0])
-    return processed_analyses
+                analyses_set.add(line.split(",")[0])
+    return analyses_set
 
 
 def download_files(analyses_array, download_target_dir, processed_analyses_file):
@@ -182,6 +183,8 @@ def main():
                         help="Number of analyses to download (max = 10000)")
     parser.add_argument("--processed-analyses-file", required=True,
                         help="full path to the file containing all the processed analyses")
+    parser.add_argument("--ignored-analyses-file", required=True,
+                        help="full path to the file containing a list of analyses to skip when processing.")
     parser.add_argument("--download-target-dir", required=True, help="Full path to the target download directory")
     parser.add_argument("--ascp-bin", required=True, help="Full path to the ascp binary.")
     parser.add_argument("--aspera-id-dsa-key", required=True, help="Full path to the aspera id dsa key.")

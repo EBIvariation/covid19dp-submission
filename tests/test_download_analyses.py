@@ -17,12 +17,15 @@ class TestDownloadSnapshot(TestCase):
     toplevel_download_folder = os.path.join(resources_folder, 'download_analyses')
     download_target_dir = os.path.join(toplevel_download_folder, '30_eva_valid')
     processed_analyses_file = os.path.join(toplevel_download_folder, 'processed_analyses_file.txt')
+    ignored_analyses_file = os.path.join(toplevel_download_folder, 'ignored_analyses_file.txt')
     project = 'PRJEB45554'
     num_analyses_to_download = 1
 
     def setUp(self) -> None:
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
         os.makedirs(self.download_target_dir)
+        with open(self.ignored_analyses_file, 'w'):
+            pass
 
     def tearDown(self) -> None:
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
@@ -52,6 +55,7 @@ class TestDownloadSnapshot(TestCase):
         aspera_id_dsa_key = os.environ['ASPERA_ID_DSA']
         download_analyses(project=self.project, num_analyses=self.num_analyses_to_download,
                           processed_analyses_file=self.processed_analyses_file,
+                          ignored_analyses_file=self.ignored_analyses_file,
                           download_target_dir=self.download_target_dir, ascp=ascp_bin,
                           aspera_id_dsa=aspera_id_dsa_key, batch_size=100)
         vcf_files = glob.glob(f"{self.download_target_dir}/*.vcf") + glob.glob(f"{self.download_target_dir}/*.vcf.gz")
