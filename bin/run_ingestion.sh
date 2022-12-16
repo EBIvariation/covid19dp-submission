@@ -77,6 +77,7 @@ if [ ${process_exit_status} == 0 ] && [ ${grep_exit_status} == 0 ];
 then
   touch ${processing_dir}/.process_complete
   nb_processed=$(cat ${project_dir}/processed_analysis.txt| wc -l)
+  nb_ignored=$(cat ${project_dir}/ignored_analysis.txt| wc -l)
   cat > ${processing_dir}/email <<- EOF
 From: eva-noreply@ebi.ac.uk
 To: ${email_recipient}
@@ -84,6 +85,7 @@ Subject: COVID19 Data Processing batch ${current_date} completed successfully
 
 Accessioning/Clustering of ${number_to_process} new COVID19 samples started in ${current_date} is now complete.
 The total number of samples processed is ${nb_processed}
+The number of samples ignored is ${nb_ignored}
 EOF
   cat ${processing_dir}/email | sendmail ${email_recipient}
 else

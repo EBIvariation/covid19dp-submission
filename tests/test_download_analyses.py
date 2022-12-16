@@ -19,6 +19,7 @@ class TestDownloadSnapshot(TestCase):
     processed_analyses_file = os.path.join(toplevel_download_folder, 'processed_analyses_file.txt')
     ignored_analyses_file = os.path.join(toplevel_download_folder, 'ignored_analyses_file.txt')
     project = 'PRJEB45554'
+    accepted_taxonomies = 2697049
     num_analyses_to_download = 1
 
     def setUp(self) -> None:
@@ -55,7 +56,8 @@ class TestDownloadSnapshot(TestCase):
         aspera_id_dsa_key = os.environ['ASPERA_ID_DSA']
         download_analyses(project=self.project, num_analyses=self.num_analyses_to_download,
                           processed_analyses_file=self.processed_analyses_file,
-                          ignored_analyses_file=self.ignored_analyses_file,
+                          ignored_analysis_file=self.ignored_analyses_file,
+                          accepted_taxonomies=self.accepted_taxonomies,
                           download_target_dir=self.download_target_dir, ascp=ascp_bin,
                           aspera_id_dsa=aspera_id_dsa_key, batch_size=100)
         vcf_files = glob.glob(f"{self.download_target_dir}/*.vcf") + glob.glob(f"{self.download_target_dir}/*.vcf.gz")

@@ -18,6 +18,7 @@ class TestIngestCovid19DPSubmission(TestCase):
         super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
         self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
         self.project = 'PRJEB45554'
+        self.accepted_taxonomies = 2697049
         self.snapshot_name = '2021_07_23_test_snapshot'
         self.num_of_analyses = 1
         self.assembly_report_url = os.path.join(self.resources_folder,
@@ -33,6 +34,7 @@ class TestIngestCovid19DPSubmission(TestCase):
         os.makedirs(self.processing_folder)
         self.download_target_dir = os.path.join(self.processing_folder, '30_eva_valid', self.snapshot_name)
         self.processed_analyses_file = os.path.join(self.processing_folder, 'processed_analyses_file.txt')
+        self.ignored_analyses_file = os.path.join(self.processing_folder, 'ignored_analyses_file.txt')
         self.accessioning_database_name = "eva_accession"
         self.accessioning_properties_file = os.path.join(self.processing_folder, 'accessioning.properties')
         self.clustering_properties_file = os.path.join(self.processing_folder, 'clustering.properties')
@@ -96,6 +98,8 @@ class TestIngestCovid19DPSubmission(TestCase):
         ingest_covid19dp_submission(project=self.project,
                                     project_dir=self.processing_folder, num_analyses=2,
                                     processed_analyses_file=self.processed_analyses_file,
+                                    ignored_analyses_file=self.ignored_analyses_file,
+                                    accepted_taxonomies=self.accepted_taxonomies,
                                     app_config_file=self.app_config_file,
                                     nextflow_config_file=self.nextflow_config_file, resume=None)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \
