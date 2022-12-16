@@ -12,8 +12,10 @@ then
 fi
 
 tmp_dir=${eva_dir}/scratch
+project=PRJEB45554
+taxonomy=2697049
 software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
-project_dir=${eva_dir}/data/PRJEB45554
+project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 number_to_process=10000
 
@@ -57,6 +59,7 @@ mkdir -p ${processing_dir} ${log_dir} ${public_dir}
 export TMPDIR=${tmp_dir}
 
 ${software_dir}/production/bin/ingest_covid19dp_submission.py \
+  --project ${project} --accepted-taxonomies ${taxonomy} \
   --project-dir ${project_dir} --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \
   --processed-analyses-file ${project_dir}/processed_analysis.txt \
