@@ -70,12 +70,3 @@ class TestVCFVerticalConcat(TestCase):
                                         return_process_output=True)
         self.assertEqual("", diffs.strip())
 
-        # Attempts at re-processing with the processing directory still existing should fail
-        with self.assertRaises(FileExistsError) as process_dir_exists_exception:
-            run_vcf_vertical_concat_pipeline(toplevel_vcf_dir=download_target_dir,
-                                             concat_processing_dir=self.processing_dir,
-                                             concat_chunk_size=2, bcftools_binary="bcftools",
-                                             nextflow_binary="nextflow", nextflow_config_file=None, resume=False)
-        self.assertEqual(process_dir_exists_exception.exception.args[0],
-                         f"FAIL: Vertical concatenation processing directory: {self.processing_dir} "
-                         f"already exists. Please delete that directory to re-process.")

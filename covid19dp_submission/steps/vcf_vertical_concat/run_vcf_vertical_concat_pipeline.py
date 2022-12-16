@@ -17,6 +17,7 @@ import glob
 import inspect
 import math
 import os
+import shutil
 import sys
 
 from .vcf_vertical_concat import vcf_vertical_concat
@@ -153,10 +154,10 @@ def run_vcf_vertical_concat_pipeline(toplevel_vcf_dir, concat_processing_dir, co
                                      bcftools_binary, nextflow_binary, nextflow_config_file, resume):
     vcf_files = sorted(glob.glob(f"{toplevel_vcf_dir}/*.vcf.gz"))
     expected_result_file = get_concat_result_file_name(concat_processing_dir, len(vcf_files), concat_chunk_size)
-    os.makedirs(concat_processing_dir, exist_ok=True)
-    if os.listdir(concat_processing_dir):
-        raise FileExistsError(f"FAIL: Vertical concatenation processing directory: {concat_processing_dir} "
-                              f"already exists. Please delete that directory to re-process.")
+    if os.path.exists(concat_processing_dir):
+        logger.warning(f'Previous concatenation process output will be deleted: {concat_processing_dir}')
+        shutil.rmtree(concat_processing_dir)
+    os.makedirs(concat_processing_dir)
 
     pipeline, concat_result_file = get_multistage_vertical_concat_pipeline(vcf_files, concat_processing_dir,
                                                                            concat_chunk_size, bcftools_binary)
