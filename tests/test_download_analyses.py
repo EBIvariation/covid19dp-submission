@@ -19,7 +19,7 @@ class TestDownloadSnapshot(TestCase):
     processed_analyses_file = os.path.join(toplevel_download_folder, 'processed_analyses_file.txt')
     ignored_analyses_file = os.path.join(toplevel_download_folder, 'ignored_analyses_file.txt')
     project = 'PRJEB45554'
-    accepted_taxonomies = 2697049
+    accepted_taxonomies = [2697049]
     num_analyses_to_download = 1
 
     def setUp(self) -> None:

@@ -18,7 +18,7 @@ class TestIngestCovid19DPSubmission(TestCase):
         super(TestIngestCovid19DPSubmission, self).__init__(*args, **kwargs)
         self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
         self.project = 'PRJEB45554'
-        self.accepted_taxonomies = 2697049
+        self.accepted_taxonomies = [2697049]
         self.snapshot_name = '2021_07_23_test_snapshot'
         self.num_of_analyses = 1
         self.assembly_report_url = os.path.join(self.resources_folder,
