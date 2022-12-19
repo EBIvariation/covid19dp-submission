@@ -84,14 +84,8 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
         # Filter out based on taxonomy
         unprocessed_analyses = [a for a in unprocessed_analyses if int(a.get('tax_id') or 0) in accepted_taxonomies]
         # Gather filtered analysis that had not been previously filtered out
-        new_files_to_ignore.extend([
-            a for a in analyses_from_ena
-            if int(a.get('tax_id') or 0) not in accepted_taxonomies and
-               a.get('analysis_accession') not in analysis_to_ignore
-        ])
-        logger.debug(
-            f"number of analyses removed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
-
+        new_files_to_ignore.extend([a for a in unprocessed_analyses if int(a.get('tax_id') or 0) not in accepted_taxonomies])
+        logger.debug(f"number of analyses removed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
         if (len(analyses_for_processing) + len(unprocessed_analyses)) >= num_analyses:
             analyses_for_processing = analyses_for_processing + \
                                       unprocessed_analyses[:(num_analyses - len(analyses_for_processing))]
@@ -132,9 +126,16 @@ def filter_out_processed_analyses(analyses_array, processed_analyses):
 
 
 def add_to_ignored_file(analyses_array, ignored_analysis_file):
-    with open(ignored_analysis_file, 'a') as open_file:
-        for analysis in analyses_array:
-            open_file.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
+    accession_and_ftp = set()
+    with open(ignored_analysis_file, 'r') as open_file:
+        for line in open_file:
+            accession, ftp_path = line.strip().split(',')
+            accession_and_ftp.add((accession, ftp_path))
+    for analysis in analyses_array:
+        accession_and_ftp.add((analysis['analysis_accession'], analysis['submitted_ftp']))
+    with open(ignored_analysis_file, 'w') as open_file:
+        for accession, ftp_path in accession_and_ftp:
+            open_file.write(f"{accession},{ftp_path}\n")
 
 
 def get_analyses_from_file(processed_analyses_file):
