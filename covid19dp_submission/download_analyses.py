@@ -127,10 +127,11 @@ def filter_out_processed_analyses(analyses_array, processed_analyses):
 
 def add_to_ignored_file(analyses_array, ignored_analysis_file):
     accession_and_ftp = set()
-    with open(ignored_analysis_file, 'r') as open_file:
-        for line in open_file:
-            accession, ftp_path = line.strip().split(',')
-            accession_and_ftp.add((accession, ftp_path))
+    if os.path.exists(ignored_analysis_file):
+        with open(ignored_analysis_file, 'r') as open_file:
+            for line in open_file:
+                accession, ftp_path = line.strip().split(',')
+                accession_and_ftp.add((accession, ftp_path))
     for analysis in analyses_array:
         accession_and_ftp.add((analysis['analysis_accession'], analysis['submitted_ftp']))
     with open(ignored_analysis_file, 'w') as open_file:
