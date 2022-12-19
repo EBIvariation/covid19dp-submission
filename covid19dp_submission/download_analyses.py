@@ -101,8 +101,8 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
             analyses_for_processing = analyses_for_processing + unprocessed_analyses
             logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
             offset = offset + limit
-    logger.debug(f"Number of analyses found for processing: {len(analyses_for_processing)}")
-    logger.debug(f"Number of analyses found to be ignored in the future: {len(new_files_to_ignore)}")
+    logger.info(f"Number of analyses found for processing: {len(analyses_for_processing)}")
+    logger.info(f"Number of analyses found to be ignored in the future: {len(new_files_to_ignore)}")
 
     add_to_ignored_file(new_files_to_ignore, ignored_analysis_file)
 
