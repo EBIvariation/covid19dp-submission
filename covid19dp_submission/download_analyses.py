@@ -71,14 +71,21 @@ def total_analyses_in_project(project):
 def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies):
     offset = 0
     limit = 100000
-    analysis_to_skip = get_analyses_from_file(processed_analyses_file).union(get_analyses_from_file(ignored_analysis_file))
     analyses_for_processing = []
+    analysis_processed = get_analyses_from_file(processed_analyses_file)
+    analysis_to_ignore = get_analyses_from_file(ignored_analysis_file)
+    analysis_to_skip = analysis_processed.union(analysis_to_ignore)
+    new_files_to_ignore = []
     while offset < total_analyses:
         logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
         analyses_from_ena = get_analyses_from_ena(project, offset, limit)
         unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
-        add_to_ignored_file([a for a in analyses_from_ena if int(a.get('tax_id')) not in accepted_taxonomies], ignored_analysis_file)
-        analyses_from_ena = [a for a in analyses_from_ena if int(a.get('tax_id')) in accepted_taxonomies]
+        analyses_from_ena = [a for a in analyses_from_ena if int(a.get('tax_id') or 0) in accepted_taxonomies]
+        new_files_to_ignore.extend([
+            a for a in analyses_from_ena
+            if int(a.get('tax_id') or 0) not in accepted_taxonomies and
+               a.get('analysis_accession') not in analysis_to_ignore
+        ])
         logger.info(
             f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
 
@@ -91,6 +98,7 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
             analyses_for_processing = analyses_for_processing + unprocessed_analyses
             logger.info(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
             offset = offset + limit
+    add_to_ignored_file(new_files_to_ignore, ignored_analysis_file)
 
     return analyses_for_processing
 
