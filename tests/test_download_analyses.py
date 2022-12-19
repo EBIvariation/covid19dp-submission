@@ -30,7 +30,7 @@ class TestDownloadAnalysis(TestCase):
         if ignored_analysis:
             with open(ignored_analysis_file, 'w') as open_file:
                 for a in ignored_analysis:
-                    open_file.write(a + ',')
+                    print(a + ',', file=open_file)
         analyses = get_analyses_to_process(
             project='PRJEB45554', num_analyses=10, total_analyses=100,
             processed_analyses_file=processed_analyses_file, ignored_analysis_file=ignored_analysis_file,
@@ -53,20 +53,24 @@ class TestDownloadAnalysis(TestCase):
     def test_get_analyses_to_process_ignored_filter(self):
         analyses = self._test_get_analyses_to_process(ignored_analysis=['ERZ10000001', 'ERZ10000003', 'ERZ10000004', 'ERZ10000009', 'ERZ10000010'])
         assert [a.get('analysis_accession') for a in analyses] == [
-            'ERZ10000003', 'ERZ10000004', 'ERZ10000009', 'ERZ10000010', 'ERZ10000014',
-            'ERZ10000017', 'ERZ10000018', 'ERZ10000021', 'ERZ10000023', 'ERZ10000025'
+            'ERZ10000014', 'ERZ10000017', 'ERZ10000018', 'ERZ10000021', 'ERZ10000023',
+            'ERZ10000025', 'ERZ10000026', 'ERZ10000028', 'ERZ10000030', 'ERZ10000031'
         ]
 
     def test_add_to_ignored_file(self):
         analysis_to_ignore = [
             {'analysis_accession': 'accession1', 'submitted_ftp': 'ftp.example.com/accession1/vcf_file1.vcf.gz'},
-            {'analysis_accession': 'accession2', 'submitted_ftp': 'ftp.example.com/accession2/vcf_file1.vcf.gz'}
+            {'analysis_accession': 'accession2', 'submitted_ftp': 'ftp.example.com/accession2/vcf_file2.vcf.gz'}
         ]
         ignored_analysis_file = os.path.join(self.toplevel_download_folder, 'analysis_to_ignore.csv')
         add_to_ignored_file(analyses_array=analysis_to_ignore, ignored_analysis_file=ignored_analysis_file)
         with open(ignored_analysis_file) as open_file:
             lines = open_file.readlines()
         assert len(lines) == 2
+        analysis_to_ignore = [
+            {'analysis_accession': 'accession3', 'submitted_ftp': 'ftp.example.com/accession3/vcf_file3.vcf.gz'},
+            {'analysis_accession': 'accession4', 'submitted_ftp': 'ftp.example.com/accession4/vcf_file4.vcf.gz'}
+        ]
         add_to_ignored_file(analyses_array=analysis_to_ignore, ignored_analysis_file=ignored_analysis_file)
         with open(ignored_analysis_file) as open_file:
             lines = open_file.readlines()
