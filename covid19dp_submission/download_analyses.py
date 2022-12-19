@@ -77,27 +77,33 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
     analysis_to_skip = analysis_processed.union(analysis_to_ignore)
     new_files_to_ignore = []
     while offset < total_analyses:
-        logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
+        logger.debug(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
         analyses_from_ena = get_analyses_from_ena(project, offset, limit)
+        # Filter out based on previously marked analysis
         unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
-        analyses_from_ena = [a for a in analyses_from_ena if int(a.get('tax_id') or 0) in accepted_taxonomies]
+        # Filter out based on taxonomy
+        unprocessed_analyses = [a for a in unprocessed_analyses if int(a.get('tax_id') or 0) in accepted_taxonomies]
+        # Gather filtered analysis that had not been previously filtered out
         new_files_to_ignore.extend([
             a for a in analyses_from_ena
             if int(a.get('tax_id') or 0) not in accepted_taxonomies and
                a.get('analysis_accession') not in analysis_to_ignore
         ])
-        logger.info(
-            f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
+        logger.debug(
+            f"number of analyses removed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
 
         if (len(analyses_for_processing) + len(unprocessed_analyses)) >= num_analyses:
             analyses_for_processing = analyses_for_processing + \
                                       unprocessed_analyses[:(num_analyses - len(analyses_for_processing))]
-            logger.info(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
+            logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
             break
         else:
             analyses_for_processing = analyses_for_processing + unprocessed_analyses
-            logger.info(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
+            logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
             offset = offset + limit
+    logger.debug(f"Number of analyses found for processing: {len(analyses_for_processing)}")
+    logger.debug(f"Number of analyses found to be ignored in the future: {len(new_files_to_ignore)}")
+
     add_to_ignored_file(new_files_to_ignore, ignored_analysis_file)
 
     return analyses_for_processing
