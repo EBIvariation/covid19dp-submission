@@ -28,6 +28,10 @@ def main():
                         help="Number of analyses to download (max = 10000)")
     parser.add_argument("--processed-analyses-file", required=True,
                         help="full path to the file containing all the processed analyses")
+    parser.add_argument("--ignored-analyses-file", required=True,
+                        help="full path to the file containing a list of analyses to skip when processing.")
+    parser.add_argument("--accepted-taxonomies", required=True, nargs='+', type=int,
+                        help="taxonomy id of the data that should be downloaded from ENA")
     parser.add_argument("--app-config-file",
                         help="Full path to the application config file (ex: /path/to/config.yml)", required=True)
     parser.add_argument("--nextflow-config-file",
@@ -39,7 +43,8 @@ def main():
     logging_config.add_stdout_handler()
 
     ingest_covid19dp_submission(args.project, args.project_dir, args.num_analyses,
-                                args.processed_analyses_file, args.app_config_file, args.nextflow_config_file,
+                                args.processed_analyses_file, args.ignored_analyses_file, args.accepted_taxonomies,
+                                args.app_config_file, args.nextflow_config_file,
                                 args.resume_snapshot)
 
 

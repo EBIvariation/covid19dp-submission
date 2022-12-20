@@ -5,11 +5,76 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from covid19dp_submission import ROOT_DIR
-from covid19dp_submission.download_analyses import download_analyses, download_files_via_aspera, UnfinishedBatchError
+from covid19dp_submission.download_analyses import download_analyses, download_files_via_aspera, UnfinishedBatchError, \
+    add_to_ignored_file, get_analyses_to_process
 
 
 def touch(f):
     open(f, 'w').close()
+
+
+class TestDownloadAnalysis(TestCase):
+    resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
+    toplevel_download_folder = os.path.join(resources_folder, 'download_analyses')
+
+    def setUp(self) -> None:
+        shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
+        os.makedirs(self.toplevel_download_folder)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
+
+    def _test_get_analyses_to_process(self, ignored_analysis=None, taxonomy=2697049):
+        processed_analyses_file = os.path.join(self.toplevel_download_folder, 'processed_analyses.csv')
+        ignored_analysis_file = os.path.join(self.toplevel_download_folder, 'ignored_analysis.csv')
+        if ignored_analysis:
+            with open(ignored_analysis_file, 'w') as open_file:
+                for a in ignored_analysis:
+                    print(a + ',', file=open_file)
+        analyses = get_analyses_to_process(
+            project='PRJEB45554', num_analyses=10, total_analyses=100,
+            processed_analyses_file=processed_analyses_file, ignored_analysis_file=ignored_analysis_file,
+            accepted_taxonomies=[taxonomy]
+        )
+        return analyses
+
+
+    def test_get_analyses_to_process(self):
+        analyses = self._test_get_analyses_to_process()
+        assert [a.get('analysis_accession') for a in analyses] == [
+            'ERZ10000001', 'ERZ10000003', 'ERZ10000004', 'ERZ10000009', 'ERZ10000010',
+            'ERZ10000014', 'ERZ10000017', 'ERZ10000018', 'ERZ10000021', 'ERZ10000023'
+        ]
+
+    def test_get_analyses_to_process_taxo_filter(self):
+        analyses = self._test_get_analyses_to_process(taxonomy=999999)
+        assert [a.get('analysis_accession') for a in analyses] == []
+
+    def test_get_analyses_to_process_ignored_filter(self):
+        analyses = self._test_get_analyses_to_process(ignored_analysis=['ERZ10000001', 'ERZ10000003', 'ERZ10000004', 'ERZ10000009', 'ERZ10000010'])
+        assert [a.get('analysis_accession') for a in analyses] == [
+            'ERZ10000014', 'ERZ10000017', 'ERZ10000018', 'ERZ10000021', 'ERZ10000023',
+            'ERZ10000025', 'ERZ10000026', 'ERZ10000028', 'ERZ10000030', 'ERZ10000031'
+        ]
+
+    def test_add_to_ignored_file(self):
+        analysis_to_ignore = [
+            {'analysis_accession': 'accession1', 'submitted_ftp': 'ftp.example.com/accession1/vcf_file1.vcf.gz'},
+            {'analysis_accession': 'accession2', 'submitted_ftp': 'ftp.example.com/accession2/vcf_file2.vcf.gz'}
+        ]
+        ignored_analysis_file = os.path.join(self.toplevel_download_folder, 'analysis_to_ignore.csv')
+        add_to_ignored_file(analyses_array=analysis_to_ignore, ignored_analysis_file=ignored_analysis_file)
+        with open(ignored_analysis_file) as open_file:
+            lines = open_file.readlines()
+        assert len(lines) == 2
+        analysis_to_ignore = [
+            {'analysis_accession': 'accession3', 'submitted_ftp': 'ftp.example.com/accession3/vcf_file3.vcf.gz'},
+            {'analysis_accession': 'accession4', 'submitted_ftp': 'ftp.example.com/accession4/vcf_file4.vcf.gz'}
+        ]
+        add_to_ignored_file(analyses_array=analysis_to_ignore, ignored_analysis_file=ignored_analysis_file)
+        with open(ignored_analysis_file) as open_file:
+            lines = open_file.readlines()
+        assert len(lines) == 4
 
 
 class TestDownloadSnapshot(TestCase):
@@ -17,12 +82,16 @@ class TestDownloadSnapshot(TestCase):
     toplevel_download_folder = os.path.join(resources_folder, 'download_analyses')
     download_target_dir = os.path.join(toplevel_download_folder, '30_eva_valid')
     processed_analyses_file = os.path.join(toplevel_download_folder, 'processed_analyses_file.txt')
+    ignored_analyses_file = os.path.join(toplevel_download_folder, 'ignored_analyses_file.txt')
     project = 'PRJEB45554'
+    accepted_taxonomies = [2697049]
     num_analyses_to_download = 1
 
     def setUp(self) -> None:
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
         os.makedirs(self.download_target_dir)
+        with open(self.ignored_analyses_file, 'w'):
+            pass
 
     def tearDown(self) -> None:
         shutil.rmtree(self.toplevel_download_folder, ignore_errors=True)
@@ -52,6 +121,8 @@ class TestDownloadSnapshot(TestCase):
         aspera_id_dsa_key = os.environ['ASPERA_ID_DSA']
         download_analyses(project=self.project, num_analyses=self.num_analyses_to_download,
                           processed_analyses_file=self.processed_analyses_file,
+                          ignored_analysis_file=self.ignored_analyses_file,
+                          accepted_taxonomies=self.accepted_taxonomies,
                           download_target_dir=self.download_target_dir, ascp=ascp_bin,
                           aspera_id_dsa=aspera_id_dsa_key, batch_size=100)
         vcf_files = glob.glob(f"{self.download_target_dir}/*.vcf") + glob.glob(f"{self.download_target_dir}/*.vcf.gz")

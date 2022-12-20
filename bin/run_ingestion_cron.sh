@@ -9,8 +9,9 @@ then
   echo "run_ingestion.sh does not have access to eva_dir variable. Please set it above or populate ~/.covid19dp_processing"
   exit 1
 fi
+project=PRJEB45554
 software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
-project_dir=${eva_dir}/data/PRJEB45554
+project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 
 #Check if the previous process is still running

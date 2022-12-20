@@ -31,13 +31,14 @@ class UnfinishedBatchError(Exception):
     pass
 
 
-def download_analyses(project, num_analyses, processed_analyses_file, download_target_dir, ascp, aspera_id_dsa,
-                      batch_size=100):
+def download_analyses(project, num_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies,
+                      download_target_dir, ascp, aspera_id_dsa, batch_size=100):
     total_analyses = total_analyses_in_project(project)
     logger.info(f"total analyses in project {project}: {total_analyses}")
 
-    analyses_array = get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file)
+    analyses_array = get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies)
     logger.info(f"number of analyses to process: {len(analyses_array)}")
+
 
     os.makedirs(download_target_dir, exist_ok=True)
     # Sending a shallow copy of the analyses_array because it will be modified during the download to accommodate
@@ -67,27 +68,37 @@ def total_analyses_in_project(project):
     return response.json()
 
 
-def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file):
+def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies):
     offset = 0
     limit = 100000
-    processed_analyses = get_processed_analyses(processed_analyses_file)
     analyses_for_processing = []
+    analysis_processed = get_analyses_from_file(processed_analyses_file)
+    analysis_to_ignore = get_analyses_from_file(ignored_analysis_file)
+    analysis_to_skip = analysis_processed.union(analysis_to_ignore)
+    new_files_to_ignore = []
     while offset < total_analyses:
-        logger.info(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
+        logger.debug(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
         analyses_from_ena = get_analyses_from_ena(project, offset, limit)
-        unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, processed_analyses)
-        logger.info(
-            f"number of analyses already processed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
-
+        # Filter out based on previously marked analysis
+        unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
+        # Filter out based on taxonomy
+        unprocessed_analyses = [a for a in unprocessed_analyses if int(a.get('tax_id') or 0) in accepted_taxonomies]
+        # Gather filtered analysis that had not been previously filtered out
+        new_files_to_ignore.extend([a for a in unprocessed_analyses if int(a.get('tax_id') or 0) not in accepted_taxonomies])
+        logger.debug(f"number of analyses removed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
         if (len(analyses_for_processing) + len(unprocessed_analyses)) >= num_analyses:
             analyses_for_processing = analyses_for_processing + \
                                       unprocessed_analyses[:(num_analyses - len(analyses_for_processing))]
-            logger.info(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
+            logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
             break
         else:
             analyses_for_processing = analyses_for_processing + unprocessed_analyses
-            logger.info(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
+            logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
             offset = offset + limit
+    logger.info(f"Number of analyses found for processing: {len(analyses_for_processing)}")
+    logger.info(f"Number of analyses found to be ignored in the future: {len(new_files_to_ignore)}")
+
+    add_to_ignored_file(new_files_to_ignore, ignored_analysis_file)
 
     return analyses_for_processing
 
@@ -96,7 +107,7 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
 def get_analyses_from_ena(project, offset, limit):
     analyses_url = (
         f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}&offset={offset}"
-        f"&limit={limit}&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera"
+        f"&limit={limit}&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera,tax_id"
     )
     response = requests.get(analyses_url)
     if response.status_code != 200:
@@ -114,13 +125,27 @@ def filter_out_processed_analyses(analyses_array, processed_analyses):
     return unprocessed_analyses
 
 
-def get_processed_analyses(processed_analyses_file):
-    processed_analyses = set()
+def add_to_ignored_file(analyses_array, ignored_analysis_file):
+    accession_and_ftp = set()
+    if os.path.exists(ignored_analysis_file):
+        with open(ignored_analysis_file, 'r') as open_file:
+            for line in open_file:
+                accession, ftp_path = line.strip().split(',')
+                accession_and_ftp.add((accession, ftp_path))
+    for analysis in analyses_array:
+        accession_and_ftp.add((analysis['analysis_accession'], analysis['submitted_ftp']))
+    with open(ignored_analysis_file, 'w') as open_file:
+        for accession, ftp_path in accession_and_ftp:
+            open_file.write(f"{accession},{ftp_path}\n")
+
+
+def get_analyses_from_file(processed_analyses_file):
+    analyses_set = set()
     if os.path.isfile(processed_analyses_file):
         with open(processed_analyses_file, 'r') as file:
             for line in file:
-                processed_analyses.add(line.split(",")[0])
-    return processed_analyses
+                analyses_set.add(line.split(",")[0])
+    return analyses_set
 
 
 def download_files(analyses_array, download_target_dir, processed_analyses_file):
@@ -182,6 +207,10 @@ def main():
                         help="Number of analyses to download (max = 10000)")
     parser.add_argument("--processed-analyses-file", required=True,
                         help="full path to the file containing all the processed analyses")
+    parser.add_argument("--ignored-analyses-file", required=True,
+                        help="full path to the file containing a list of analyses to skip when processing.")
+    parser.add_argument("--accepted_taxonomies", required=True, nargs='+', type=int,
+                        help="taxonomy id of the data that should be downloaded from ENA")
     parser.add_argument("--download-target-dir", required=True, help="Full path to the target download directory")
     parser.add_argument("--ascp-bin", required=True, help="Full path to the ascp binary.")
     parser.add_argument("--aspera-id-dsa-key", required=True, help="Full path to the aspera id dsa key.")
@@ -194,8 +223,8 @@ def main():
     if args.num_analyses < 1 or args.num_analyses > 10000:
         raise Exception("number of analyses to download should be between 1 and 10000")
 
-    download_analyses(args.project, args.num_analyses, args.processed_analyses_file, args.download_target_dir,
-                      args.ascp_bin, args.aspera_id_dsa_key, args.batch_size)
+    download_analyses(args.project, args.num_analyses, args.processed_analyses_file, args.accepted_taxonomies,
+                      args.download_target_dir, args.ascp_bin, args.aspera_id_dsa_key, args.batch_size)
 
 
 if __name__ == "__main__":

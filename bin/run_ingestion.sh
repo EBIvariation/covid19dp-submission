@@ -12,8 +12,10 @@ then
 fi
 
 tmp_dir=${eva_dir}/scratch
+project=PRJEB45554
+taxonomy=2697049
 software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
-project_dir=${eva_dir}/data/PRJEB45554
+project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 number_to_process=10000
 
@@ -57,9 +59,12 @@ mkdir -p ${processing_dir} ${log_dir} ${public_dir}
 export TMPDIR=${tmp_dir}
 
 ${software_dir}/production/bin/ingest_covid19dp_submission.py \
+  --project ${project} --accepted-taxonomies ${taxonomy} \
   --project-dir ${project_dir} --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \
-  --processed-analyses-file ${project_dir}/processed_analysis.txt --num-analyses ${number_to_process} \
+  --processed-analyses-file ${project_dir}/processed_analysis.txt \
+  --ignored-analyses-file ${project_dir}/ignored_analysis.txt \
+  --num-analyses ${number_to_process} \
   --resume-snapshot ${current_date} \
   >> ${processing_dir}/ingest_covid19dp.log \
   2>> ${processing_dir}/ingest_covid19dp.err
@@ -72,6 +77,7 @@ if [ ${process_exit_status} == 0 ] && [ ${grep_exit_status} == 0 ];
 then
   touch ${processing_dir}/.process_complete
   nb_processed=$(cat ${project_dir}/processed_analysis.txt| wc -l)
+  nb_ignored=$(cat ${project_dir}/ignored_analysis.txt| wc -l)
   cat > ${processing_dir}/email <<- EOF
 From: eva-noreply@ebi.ac.uk
 To: ${email_recipient}
@@ -79,6 +85,7 @@ Subject: COVID19 Data Processing batch ${current_date} completed successfully
 
 Accessioning/Clustering of ${number_to_process} new COVID19 samples started in ${current_date} is now complete.
 The total number of samples processed is ${nb_processed}
+The number of samples ignored is ${nb_ignored}
 EOF
   cat ${processing_dir}/email | sendmail ${email_recipient}
 else
