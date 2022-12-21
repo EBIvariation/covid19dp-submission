@@ -47,7 +47,7 @@ class VerticalConcatProcess:
         run_command_with_output(f"Running bcftools concat with the file list {self.files_to_concat_list}...",
                                 f"{self.bcftools_binary} concat "
                                 "--allow-overlaps --remove-duplicates "
-                                f"--file-list {self.files_to_concat_list} -o {self.output_vcf_file} -O z")
+                                f"--file-list {self.files_to_concat_list} -o {self.output_vcf_file} -O z 2>&1")
         # Use CSI indexes because they can support longer genomes
         # see http://www.htslib.org/doc/tabix.html
         run_command_with_output(f"Running tabix on the output VCF {self.output_vcf_file}...",
