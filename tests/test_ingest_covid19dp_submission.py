@@ -69,7 +69,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                 f'{self.processing_folder} '
                                 f'&& cp eva-accession-clustering/target/*exec*.jar '
                                 f'{self.processing_folder} '
-                                f'&& cp eva-accession-release/target/*.jar '
+                                f'&& cp eva-accession-release/target/*exec*.jar '
                                 f'{self.processing_folder} '
                                 f'&& cd {self.processing_folder} && rm -rf eva-accession"')
         self.accession_jar_file = glob.glob(f"{self.processing_folder}/eva-accession-pipeline*.jar")[0]
