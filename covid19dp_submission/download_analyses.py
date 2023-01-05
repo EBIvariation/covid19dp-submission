@@ -36,9 +36,9 @@ def download_analyses(project, num_analyses, processed_analyses_file, ignored_an
     total_analyses = total_analyses_in_project(project)
     logger.info(f"total analyses in project {project}: {total_analyses}")
 
-    analyses_array = get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies)
+    analyses_array = get_analyses_to_process(project, num_analyses, processed_analyses_file, ignored_analysis_file,
+                                             accepted_taxonomies)
     logger.info(f"number of analyses to process: {len(analyses_array)}")
-
 
     os.makedirs(download_target_dir, exist_ok=True)
     # Sending a shallow copy of the analyses_array because it will be modified during the download to accommodate
@@ -68,33 +68,23 @@ def total_analyses_in_project(project):
     return response.json()
 
 
-def get_analyses_to_process(project, num_analyses, total_analyses, processed_analyses_file, ignored_analysis_file, accepted_taxonomies):
-    offset = 0
-    limit = 100000
-    analyses_for_processing = []
+def get_analyses_to_process(project, num_analyses, processed_analyses_file, ignored_analysis_file,
+                            accepted_taxonomies):
     analysis_processed = get_analyses_from_file(processed_analyses_file)
     analysis_to_ignore = get_analyses_from_file(ignored_analysis_file)
     analysis_to_skip = analysis_processed.union(analysis_to_ignore)
     new_files_to_ignore = []
-    while offset < total_analyses:
-        logger.debug(f"Fetching ENA analyses from {offset} to  {offset + limit} (offset={offset}, limit={limit})")
-        analyses_from_ena = get_analyses_from_ena(project, offset, limit)
-        # Filter out based on previously marked analysis
-        unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
-        # Filter out based on taxonomy
-        unprocessed_analyses = [a for a in unprocessed_analyses if int(a.get('tax_id') or 0) in accepted_taxonomies]
-        # Gather filtered analysis that had not been previously filtered out
-        new_files_to_ignore.extend([a for a in unprocessed_analyses if int(a.get('tax_id') or 0) not in accepted_taxonomies])
-        logger.debug(f"number of analyses removed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
-        if (len(analyses_for_processing) + len(unprocessed_analyses)) >= num_analyses:
-            analyses_for_processing = analyses_for_processing + \
-                                      unprocessed_analyses[:(num_analyses - len(analyses_for_processing))]
-            logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
-            break
-        else:
-            analyses_for_processing = analyses_for_processing + unprocessed_analyses
-            logger.debug(f"Number of analyses found for processing till now : {len(analyses_for_processing)}")
-            offset = offset + limit
+
+    logger.debug(f"Fetching ENA analyses from project {project}")
+    analyses_from_ena = get_analyses_from_ena(project)
+    # Filter out based on previously marked analysis
+    unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
+    # Filter out based on taxonomy
+    unprocessed_analyses = [a for a in unprocessed_analyses if int(a.get('tax_id') or 0) in accepted_taxonomies]
+    # Gather filtered analysis that had not been previously filtered out
+    new_files_to_ignore.extend([a for a in unprocessed_analyses if int(a.get('tax_id') or 0) not in accepted_taxonomies])
+    analyses_for_processing = unprocessed_analyses[:num_analyses]
+    logger.debug(f"Number of analyses removed in current iteration: {len(analyses_from_ena) - len(unprocessed_analyses)}")
     logger.info(f"Number of analyses found for processing: {len(analyses_for_processing)}")
     logger.info(f"Number of analyses found to be ignored in the future: {len(new_files_to_ignore)}")
 
@@ -104,11 +94,15 @@ def get_analyses_to_process(project, num_analyses, total_analyses, processed_ana
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
-def get_analyses_from_ena(project, offset, limit):
+def get_analyses_from_ena(project, offset=0, limit=0):
     analyses_url = (
-        f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}&offset={offset}"
-        f"&limit={limit}&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera,tax_id"
+        f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}"
+        f"&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera,tax_id"
     )
+    if offset:
+        analyses_url += f'&offset={offset}'
+    if limit:
+        analyses_url += f'&limit={limit}'
     response = requests.get(analyses_url)
     if response.status_code != 200:
         logger.error(f"Error fetching analyses info from ENA for {project}")
