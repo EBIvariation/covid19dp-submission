@@ -76,6 +76,8 @@ def get_analyses_to_process(project, num_analyses, processed_analyses_file, igno
     new_files_to_ignore = []
 
     logger.debug(f"Fetching ENA analyses from project {project}")
+    # FIXME: Retrieve all the project's analysis in one go because the offset is not working beyond 1,000,000 analysis
+    # Revert this if this limitation is address on ENA's side
     analyses_from_ena = get_analyses_from_ena(project)
     # Filter out based on previously marked analysis
     unprocessed_analyses = filter_out_processed_analyses(analyses_from_ena, analysis_to_skip)
@@ -95,6 +97,10 @@ def get_analyses_to_process(project, num_analyses, processed_analyses_file, igno
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
 def get_analyses_from_ena(project, offset=0, limit=0):
+    """
+    Retrieve analysis of a specific project from ENA API. If offset and limit are not set, it retrieves all the
+    analysis of the project.
+    """
     analyses_url = (
         f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}"
         f"&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera,tax_id"
