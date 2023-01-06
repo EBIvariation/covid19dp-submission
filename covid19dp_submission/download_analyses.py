@@ -107,7 +107,7 @@ def get_analyses_from_ena(project, offset=0, limit=0):
     )
     if offset:
         analyses_url += f'&offset={offset}'
-    if limit:
+    if limit or limit == 0:
         analyses_url += f'&limit={limit}'
     response = requests.get(analyses_url)
     if response.status_code != 200:
