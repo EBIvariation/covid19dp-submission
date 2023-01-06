@@ -58,7 +58,7 @@ class TestAccessionVcf(TestCase):
                                 f'"cd {self.processing_folder} '
                                 f'&& git clone https://github.com/EBIVariation/eva-accession '
                                 f'&& cd eva-accession && mvn -q package -DskipTests '
-                                f'&& cp eva-accession-pipeline/target/*.jar '
+                                f'&& cp eva-accession-pipeline/target/*exec*.jar '
                                 f'{self.processing_folder} '
                                 f'&& cp eva-accession-clustering/target/*exec*.jar '
                                 f'{self.processing_folder} '

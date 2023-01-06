@@ -32,12 +32,11 @@ class TestDownloadAnalysis(TestCase):
                 for a in ignored_analysis:
                     print(a + ',', file=open_file)
         analyses = get_analyses_to_process(
-            project='PRJEB45554', num_analyses=10, total_analyses=100,
+            project='PRJEB45554', num_analyses=10,
             processed_analyses_file=processed_analyses_file, ignored_analysis_file=ignored_analysis_file,
             accepted_taxonomies=[taxonomy]
         )
         return analyses
-
 
     def test_get_analyses_to_process(self):
         analyses = self._test_get_analyses_to_process()
