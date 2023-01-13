@@ -34,7 +34,7 @@ def bgzip_and_index(vcf_file: str, output_file: str, bcftools_binary: str) -> st
         decompression_required = True
     commands = [
         f'gunzip -c {vcf_file} > {vcf_file_name_no_ext}.vcf' if decompression_required else ':',
-        f'{bcftools_binary} sort {vcf_file_name_no_ext}.vcf -O z -o {output_file}',
+        f'{bcftools_binary} sort -O z -o {output_file} {vcf_file_name_no_ext}.vcf',
         f'{bcftools_binary} index -f --csi {output_file}',
         f'rm -rf {vcf_file_name_no_ext}.vcf' if decompression_required else ':'
     ]
