@@ -43,10 +43,9 @@ def download_analyses(project, num_analyses, processed_analyses_file, ignored_an
     os.makedirs(download_target_dir, exist_ok=True)
     # Sending a shallow copy of the analyses_array because it will be modified during the download to accommodate
     # the retry mechanism
-    download_files_via_aspera(copy.copy(analyses_array), download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
-                              batch_size)
+    vcf_files_downloaded = download_files_via_aspera(copy.copy(analyses_array), download_target_dir,
+                                                     processed_analyses_file, ascp, aspera_id_dsa, batch_size)
 
-    vcf_files_downloaded = glob.glob(f"{download_target_dir}/*.vcf") + glob.glob(f"{download_target_dir}/*.vcf.gz")
     logger.info(f"total number of files downloaded: {len(vcf_files_downloaded)}")
 
     if len(analyses_array) != len(vcf_files_downloaded):
@@ -169,6 +168,7 @@ def download_files(analyses_array, download_target_dir, processed_analyses_file)
 @retry(exceptions=(UnfinishedBatchError,), logger=logger, tries=4, delay=10, backoff=1.2, jitter=(1, 3))
 def download_files_via_aspera(analyses_array, download_target_dir, processed_analyses_file, ascp, aspera_id_dsa,
                               batch_size=100):
+    downloaded_files = []
     logger.info(f"total number of files to download: {len(analyses_array)}")
     with open(processed_analyses_file, 'a') as open_file:
         # This copy won't change throughout the iteration
@@ -182,6 +182,7 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
             for analysis in analysis_batch:
                 expected_output_file = os.path.join(download_target_dir, os.path.basename(analysis['submitted_aspera']))
                 if os.path.exists(expected_output_file):
+                    downloaded_files.append(expected_output_file)
                     open_file.write(f"{analysis['analysis_accession']},{analysis['submitted_ftp']}\n")
                     # WARNING: This will modify the content of the original analysis array allowing the retry to
                     # only deal with a subset of files to download.
@@ -191,6 +192,7 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
     if len(analyses_array) > 0:
         # Trigger a retry
         raise UnfinishedBatchError(f'There are {len(analyses_array)} vcf files that were not downloaded')
+    return downloaded_files
 
 
 @retry(logger=logger, tries=4, delay=120, backoff=1.2, jitter=(1, 3))
