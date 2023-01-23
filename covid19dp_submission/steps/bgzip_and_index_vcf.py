@@ -25,7 +25,7 @@ def _get_vcf_filename_without_extension(vcf_file_name: str) -> str:
     return vcf_file_name.replace(".vcf.gz", "").replace(".vcf", "")
 
 
-def bgzip_and_index(vcf_file: str, output_file: str, bcftools_binary: str) -> str:
+def bgzip_and_index(vcf_file: str, output_file: str, bcftools_binary: str, with_sort: bool=False) -> str:
     vcf_file_name_no_ext = _get_vcf_filename_without_extension(vcf_file)
     vcf_file_name_no_ext_and_path = os.path.basename(vcf_file_name_no_ext)
     decompression_required = False
@@ -34,7 +34,9 @@ def bgzip_and_index(vcf_file: str, output_file: str, bcftools_binary: str) -> st
         decompression_required = True
     commands = [
         f'gunzip -c {vcf_file} > {vcf_file_name_no_ext}.vcf' if decompression_required else ':',
-        f'{bcftools_binary} sort -O z -o {output_file} {vcf_file_name_no_ext}.vcf',
+            f'{bcftools_binary} sort -O z -o {output_file} {vcf_file_name_no_ext}.vcf'
+            if with_sort else
+            f'{bcftools_binary} convert {vcf_file_name_no_ext}.vcf -O z -o {output_file}',
         f'{bcftools_binary} index -f --csi {output_file}',
         f'rm -rf {vcf_file_name_no_ext}.vcf' if decompression_required else ':'
     ]
