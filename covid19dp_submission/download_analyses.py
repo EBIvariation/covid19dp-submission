@@ -173,9 +173,12 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
     with open(processed_analyses_file, 'a') as open_file:
         # This copy won't change throughout the iteration
         for analysis_batch in chunked(copy.copy(analyses_array), batch_size):
-            download_urls = [
-                f"era-fasp@{analysis['submitted_aspera']}" for analysis in analysis_batch
-            ]
+            download_urls = []
+            for analysis in analysis_batch:
+                if analysis.get('submitted_aspera'):
+                    download_urls.append(f"era-fasp@{analysis['submitted_aspera']}")
+                else:
+                    logger.error(f'No Aspera path available for analysis {analysis}')
             command = f'{ascp} -i {aspera_id_dsa} -QT -l 300m -P 33001 {" ".join(download_urls)} {download_target_dir}'
             run_command_with_output(f"Download batch of covid19 data", command)
 
