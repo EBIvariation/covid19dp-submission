@@ -108,6 +108,9 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     else:
         logger.info(f'All {num_analyses} analysis have been downloaded already. Skipping.')
     vcf_files_to_be_downloaded = create_download_file_list(config)
+    if len(vcf_files_to_be_downloaded) == 0:
+        logger.info("No files to process, done.")
+        return
     config['submission']['concat_result_file'] = get_concat_result_file_name(
         config['submission']['concat_processing_dir'],
         len(vcf_files_to_be_downloaded),
