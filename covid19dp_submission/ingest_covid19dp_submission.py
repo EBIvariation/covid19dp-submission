@@ -62,7 +62,7 @@ def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_con
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
     release_dir = os.path.join(project_dir, 'release')
-    prop = SpringPropertiesGenerator()
+    prop = SpringPropertiesGenerator(config['maven']['environment'], config['maven']['settings_file'])
     accessioning_properties_file = os.path.join(download_target_dir, 'accessioning.properties')
     clustering_properties_file = os.path.join(download_target_dir, 'clustering.properties')
     release_properties_file = os.path.join(download_target_dir, 'release.properties')

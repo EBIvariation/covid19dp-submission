@@ -14,7 +14,8 @@ fi
 tmp_dir=${eva_dir}/scratch
 project=$1
 taxonomy=2697049
-software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
+script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+software_dir=$(dirname $(dirname ${script_dir}))
 project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 number_to_process=10000
@@ -58,7 +59,7 @@ trap 'rm ${lock_file}' EXIT
 mkdir -p ${processing_dir} ${log_dir} ${public_dir}
 export TMPDIR=${tmp_dir}
 
-${software_dir}/production/bin/ingest_covid19dp_submission.py \
+${script_dir}/ingest_covid19dp_submission.py \
   --project ${project} --accepted-taxonomies ${taxonomy} \
   --project-dir ${project_dir} --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \

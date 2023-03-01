@@ -10,7 +10,7 @@ then
   exit 1
 fi
 project=$1
-software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
+script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 
@@ -27,5 +27,5 @@ then
   echo "Lock file is not set but there is an ingest_covid19dp job running"
 else
   bsub -e ${project_dir}/run_ingestion.err -o ${project_dir}/run_ingestion.out -J ingest_covid19dp -M 20G \
-   -R "rusage[mem=20960]" "${software_dir}/production/bin/run_ingestion.sh ${project}"
+   -R "rusage[mem=20960]" "${script_dir}/run_ingestion.sh ${project}"
 fi
