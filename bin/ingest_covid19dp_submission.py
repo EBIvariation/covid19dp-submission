@@ -21,7 +21,7 @@ from covid19dp_submission.ingest_covid19dp_submission import ingest_covid19dp_su
 
 def main():
     parser = argparse.ArgumentParser(description='Ingest a snapshot submission from the Covid-19 data portal project')
-    parser.add_argument("--project", default='PRJEB45554', required=False,
+    parser.add_argument("--project", required=True,
                         help="project from which analyses needs to be downloaded")
     parser.add_argument("--project-dir", help="Project directory (ex: /path/to/PRJ)", default=None, required=True)
     parser.add_argument("--num-analyses", type=int, default=10000, required=False,
