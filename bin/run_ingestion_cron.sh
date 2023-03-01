@@ -2,7 +2,9 @@
 
 #email_recipient=***********
 # Grab the variables from a config bash script
-source ~/.covid19dp_processing
+script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+software_dir=$(dirname $(dirname ${script_dir}))
+source ${software_dir}/covid19dp_processing
 
 if [ -z "${eva_dir}" ] ;
 then
@@ -10,7 +12,6 @@ then
   exit 1
 fi
 project=$1
-script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 
