@@ -1,4 +1,4 @@
-git+https://github.com/tcezard/eva-common-pyutils.git@EVA3172_spring_prop_generation#egg=ebi-eva-common-pyutils
+ebi-eva-common-pyutils
 pyyaml
 retry
 pymongo
