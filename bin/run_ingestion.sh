@@ -12,7 +12,7 @@ then
 fi
 
 tmp_dir=${eva_dir}/scratch
-project=PRJEB45554
+project=$1
 taxonomy=2697049
 software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
 project_dir=${eva_dir}/data/${project}

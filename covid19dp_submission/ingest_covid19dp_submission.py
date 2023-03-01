@@ -22,6 +22,7 @@ import yaml
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
 from ebi_eva_common_pyutils.logger import logging_config
+from ebi_eva_common_pyutils.spring_properties import SpringPropertiesGenerator
 
 from covid19dp_submission import NEXTFLOW_DIR
 from covid19dp_submission.download_analyses import download_analyses
@@ -51,10 +52,34 @@ def create_download_file_list(config: dict):
     return download_file_list
 
 
-def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str, app_config_file: str) -> dict:
+def _write_properties(output_file, properties_str):
+    with open(output_file, 'w') as open_file:
+        open_file.write(properties_str)
+
+
+def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_config_file: str, app_config_file: str) -> dict:
     config = get_args_from_private_config_file(app_config_file)
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
+    release_dir = os.path.join(project_dir, 'release')
+    prop = SpringPropertiesGenerator()
+    accessioning_properties_file = os.path.join(download_target_dir, 'accessioning.properties')
+    clustering_properties_file = os.path.join(download_target_dir, 'clustering.properties')
+    release_properties_file = os.path.join(download_target_dir, 'release.properties')
+    _write_properties(accessioning_properties_file, prop.get_accessioning_properties(
+        instance=None, target_assembly='GCA_009858895.3',
+        fasta=config['submission']['assembly_fasta'], assembly_report=config['submission']['assembly_report'],
+        project_accession=project, taxonomy_accession=2697049,
+        vcf_file=None, output_vcf=None)
+    )
+    _write_properties(clustering_properties_file, prop.get_clustering_properties(instance=None,
+                                  job_name='CLUSTERING_FROM_MONGO_JOB', target_assembly='GCA_009858895.3',
+                                  rs_report_path='GCA_009858895.3_rs_report.txt'))
+    _write_properties(release_properties_file, prop.get_release_properties(
+        job_name='CREATE_INCREMENTAL_ACCESSION_RELEASE_JOB', assembly_accession='GCA_009858895.3',
+        fasta=config['submission']['assembly_fasta'], assembly_report=config['submission']['assembly_report'],
+        output_folder=release_dir))
+
     download_file_list = os.path.join(download_target_dir, 'file_list.csv')
     submission_param_file = os.path.join(download_target_dir, 'nf_params.yml')
     concat_processing_dir = os.path.join(download_target_dir, 'processed')
@@ -69,6 +94,9 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
          'concat_processing_dir': concat_processing_dir,
          'accession_output_dir': accession_output_dir,
          'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
+         'accessioning_properties_file': accessioning_properties_file,
+         'clustering_properties_file': clustering_properties_file,
+         'release_properties_file': release_properties_file,
          'log_dir': log_dir, 'validation_dir': validation_dir
          })
     config['executable']['python'] = {'interpreter': sys.executable,
@@ -88,7 +116,7 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     else:
         snapshot_name = resume
 
-    config = _get_config(snapshot_name, project_dir, nextflow_config_file, app_config_file)
+    config = _get_config(project, snapshot_name, project_dir, nextflow_config_file, app_config_file)
     # Add default processing batch size
     if 'batch_size' not in config['submission']:
         config['submission']['batch_size'] = 100

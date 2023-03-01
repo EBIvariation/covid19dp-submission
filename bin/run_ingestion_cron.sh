@@ -9,7 +9,7 @@ then
   echo "run_ingestion.sh does not have access to eva_dir variable. Please set it above or populate ~/.covid19dp_processing"
   exit 1
 fi
-project=PRJEB45554
+project=$1
 software_dir=${eva_dir}/software/covid19dp-submission/production_deployments/
 project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
@@ -27,5 +27,5 @@ then
   echo "Lock file is not set but there is an ingest_covid19dp job running"
 else
   bsub -e ${project_dir}/run_ingestion.err -o ${project_dir}/run_ingestion.out -J ingest_covid19dp -M 20G \
-   -R "rusage[mem=20960]" "${software_dir}/production/bin/run_ingestion.sh"
+   -R "rusage[mem=20960]" "${software_dir}/production/bin/run_ingestion.sh ${project}"
 fi
