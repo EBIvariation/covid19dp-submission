@@ -67,18 +67,25 @@ def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_con
     clustering_properties_file = os.path.join(download_target_dir, 'clustering.properties')
     release_properties_file = os.path.join(download_target_dir, 'release.properties')
     _write_properties(accessioning_properties_file, prop.get_accessioning_properties(
-        instance=None, target_assembly='GCA_009858895.3',
-        fasta=config['submission']['assembly_fasta'], assembly_report=config['submission']['assembly_report'],
-        project_accession=project, taxonomy_accession=2697049,
-        vcf_file=None, output_vcf=None)
-    )
-    _write_properties(clustering_properties_file, prop.get_clustering_properties(instance=None,
-                                  job_name='CLUSTERING_FROM_MONGO_JOB', target_assembly='GCA_009858895.3',
-                                  rs_report_path='GCA_009858895.3_rs_report.txt'))
+        target_assembly='GCA_009858895.3',
+        fasta=config['submission']['assembly_fasta'],
+        assembly_report=config['submission']['assembly_report'],
+        project_accession=project,
+        taxonomy_accession=2697049
+    ))
+    _write_properties(clustering_properties_file, prop.get_clustering_properties(
+        job_name='CLUSTERING_FROM_MONGO_JOB',
+        target_assembly='GCA_009858895.3',
+        rs_report_path='GCA_009858895.3_rs_report.txt'
+    ))
     _write_properties(release_properties_file, prop.get_release_properties(
-        job_name='CREATE_INCREMENTAL_ACCESSION_RELEASE_JOB', assembly_accession='GCA_009858895.3',
-        fasta=config['submission']['assembly_fasta'], assembly_report=config['submission']['assembly_report'],
-        output_folder=release_dir))
+        job_name='CREATE_INCREMENTAL_ACCESSION_RELEASE_JOB',
+        assembly_accession='GCA_009858895.3',
+        fasta=config['submission']['assembly_fasta'],
+        assembly_report=config['submission']['assembly_report'],
+        output_folder=release_dir,
+        contig_naming='INSDC'
+    ))
 
     download_file_list = os.path.join(download_target_dir, 'file_list.csv')
     submission_param_file = os.path.join(download_target_dir, 'nf_params.yml')
@@ -86,7 +93,7 @@ def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_con
     log_dir = os.path.join(project_dir, '00_logs', snapshot_name)
     validation_dir = os.path.join(log_dir, 'validation')
     accession_output_dir = os.path.join(project_dir, '60_eva_public', snapshot_name)
-
+    public_ftp_dir = os.path.join(config['submission']['public_ftp_dir'], project)
     config['submission'].update(
         {'snapshot_name': snapshot_name,
          'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
@@ -97,6 +104,7 @@ def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_con
          'accessioning_properties_file': accessioning_properties_file,
          'clustering_properties_file': clustering_properties_file,
          'release_properties_file': release_properties_file,
+         'public_ftp_dir': public_ftp_dir,
          'log_dir': log_dir, 'validation_dir': validation_dir
          })
     config['executable']['python'] = {'interpreter': sys.executable,
