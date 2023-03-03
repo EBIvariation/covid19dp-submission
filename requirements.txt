@@ -1,4 +1,4 @@
-ebi-eva-common-pyutils
+ebi-eva-common-pyutils==0.5.2
 pyyaml
 retry
 pymongo
