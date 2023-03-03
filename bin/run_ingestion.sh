@@ -65,7 +65,7 @@ export TMPDIR=${tmp_dir}
 ${script_dir}/ingest_covid19dp_submission.py \
   --project ${project} \
   --accepted-taxonomies ${taxonomy} \
-  --assembly ${assembly}
+  --assembly ${assembly} \
   --project-dir ${project_dir} \
   --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \
