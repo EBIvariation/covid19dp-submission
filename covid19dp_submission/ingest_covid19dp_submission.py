@@ -57,7 +57,8 @@ def _write_properties(output_file, properties_str):
         open_file.write(properties_str)
 
 
-def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_config_file: str, app_config_file: str) -> dict:
+def _get_config(project: str, taxonomy_id: int, target_assembly: str, snapshot_name: str, project_dir: str,
+                nextflow_config_file: str, app_config_file: str) -> dict:
     config = get_args_from_private_config_file(app_config_file)
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
@@ -67,20 +68,22 @@ def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_con
     clustering_properties_file = os.path.join(download_target_dir, 'clustering.properties')
     release_properties_file = os.path.join(download_target_dir, 'release.properties')
     _write_properties(accessioning_properties_file, prop.get_accessioning_properties(
-        target_assembly='GCA_009858895.3',
+        target_assembly=target_assembly,
         fasta=config['submission']['assembly_fasta'],
         assembly_report=config['submission']['assembly_report'],
         project_accession=project,
-        taxonomy_accession=2697049
+        taxonomy_accession=taxonomy_id,
+        output_vcf=None,
+        vcf_file=None
     ))
     _write_properties(clustering_properties_file, prop.get_clustering_properties(
         job_name='CLUSTERING_FROM_MONGO_JOB',
-        target_assembly='GCA_009858895.3',
-        rs_report_path='GCA_009858895.3_rs_report.txt'
+        target_assembly=target_assembly,
+        rs_report_path=target_assembly + '_rs_report.txt'
     ))
     _write_properties(release_properties_file, prop.get_release_properties(
         job_name='CREATE_INCREMENTAL_ACCESSION_RELEASE_JOB',
-        assembly_accession='GCA_009858895.3',
+        assembly_accession=target_assembly,
         fasta=config['submission']['assembly_fasta'],
         assembly_report=config['submission']['assembly_report'],
         output_folder=release_dir,
@@ -115,8 +118,8 @@ def _get_config(project: str, snapshot_name: str, project_dir: str, nextflow_con
 
 
 def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int, processed_analyses_file: str,
-                                ignored_analyses_file: str, accepted_taxonomies: list, app_config_file: str,
-                                nextflow_config_file: str or None, resume: str or None):
+                                ignored_analyses_file: str, accepted_taxonomies: list, assembly: str,
+                                app_config_file: str, nextflow_config_file: str or None, resume: str or None):
     process_new_snapshot = False
     if resume is None:
         snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
@@ -124,7 +127,8 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     else:
         snapshot_name = resume
 
-    config = _get_config(project, snapshot_name, project_dir, nextflow_config_file, app_config_file)
+    config = _get_config(project, accepted_taxonomies[0], assembly,  snapshot_name, project_dir,
+                         nextflow_config_file, app_config_file)
     # Add default processing batch size
     if 'batch_size' not in config['submission']:
         config['submission']['batch_size'] = 100

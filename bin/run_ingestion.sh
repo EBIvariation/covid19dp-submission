@@ -16,10 +16,13 @@ fi
 tmp_dir=${eva_dir}/scratch
 project=$1
 taxonomy=2697049
+assembly=GCA_009858895.3
 project_dir=${eva_dir}/data/${project}
 lock_file=${project_dir}/.lock_ingest_covid19dp_submission
 number_to_process=10000
 
+#Create directory if it does not exist already
+mkdir -p {project_dir}
 
 #Check if the previous process is still running
 if [[ -e ${lock_file} ]];
@@ -31,7 +34,7 @@ fi
 # Check if there is an unfinished process
 valid_dir=${project_dir}/30_eva_valid
 
-for dir in ${valid_dir}/????_??_??_??_??_??;
+for dir in `ls ${valid_dir}/????_??_??_??_??_??`;
 do
   if [[ ! -e ${dir}/.process_complete ]];
   then
@@ -60,8 +63,11 @@ mkdir -p ${processing_dir} ${log_dir} ${public_dir}
 export TMPDIR=${tmp_dir}
 
 ${script_dir}/ingest_covid19dp_submission.py \
-  --project ${project} --accepted-taxonomies ${taxonomy} \
-  --project-dir ${project_dir} --app-config-file ${software_dir}/app_config.yml \
+  --project ${project} \
+  --accepted-taxonomies ${taxonomy} \
+  --assembly ${assembly}
+  --project-dir ${project_dir} \
+  --app-config-file ${software_dir}/app_config.yml \
   --nextflow-config-file ${software_dir}/workflow.config \
   --processed-analyses-file ${project_dir}/processed_analysis.txt \
   --ignored-analyses-file ${project_dir}/ignored_analysis.txt \
@@ -84,7 +90,7 @@ From: eva-noreply@ebi.ac.uk
 To: ${email_recipient}
 Subject: COVID19 Data Processing batch ${current_date} completed successfully
 
-Accessioning/Clustering of ${number_to_process} new COVID19 samples started in ${current_date} is now complete.
+Accessioning/Clustering of ${number_to_process} new COVID19 samples for project ${project} started in ${current_date} is now complete.
 The total number of samples processed is ${nb_processed}
 The number of samples ignored is ${nb_ignored}
 EOF

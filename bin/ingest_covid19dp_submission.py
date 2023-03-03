@@ -31,7 +31,11 @@ def main():
     parser.add_argument("--ignored-analyses-file", required=True,
                         help="full path to the file containing a list of analyses to skip when processing.")
     parser.add_argument("--accepted-taxonomies", required=True, nargs='+', type=int,
-                        help="taxonomy id of the data that should be downloaded from ENA")
+                        help="taxonomy id of the data that should be downloaded from ENA. "
+                             "The first on in this list will be used to annotate the variant")
+    parser.add_argument("--assembly", required=True, type=str,
+                        help="assembly accession used to annotate the variant when loaded to the "
+                             "accessioning warehouse.")
     parser.add_argument("--app-config-file",
                         help="Full path to the application config file (ex: /path/to/config.yml)", required=True)
     parser.add_argument("--nextflow-config-file",
@@ -44,7 +48,7 @@ def main():
 
     ingest_covid19dp_submission(args.project, args.project_dir, args.num_analyses,
                                 args.processed_analyses_file, args.ignored_analyses_file, args.accepted_taxonomies,
-                                args.app_config_file, args.nextflow_config_file,
+                                args.assembly, args.app_config_file, args.nextflow_config_file,
                                 args.resume_snapshot)
 
 
