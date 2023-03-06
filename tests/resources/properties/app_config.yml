@@ -1,3 +1,7 @@
+maven:
+  environment: development
+  settings_file: {eva_maven_settings}
+
 executable:
   nextflow: nextflow
   vcf_assembly_checker: vcf_assembly_checker_linux
@@ -16,9 +20,6 @@ jar:
 submission:
   assembly_report: {assembly_report_url}
   assembly_fasta: {fasta_file}
-  accessioning_properties_file: {accessioning_properties_file}
-  clustering_properties_file: {clustering_properties_file}
-  release_properties_file: {release_properties_file}
   memory_for_incremental_release_in_gb: 4
   concat_chunk_size: 100
   batch_size: 10

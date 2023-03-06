@@ -206,7 +206,7 @@ def download_file(download_url, download_file_path):
 def main():
     parser = argparse.ArgumentParser(description='Download analyses for processing from the Covid-19 DP project',
                                      formatter_class=argparse.RawTextHelpFormatter, add_help=False)
-    parser.add_argument("--project", default='PRJEB45554', required=False,
+    parser.add_argument("--project", required=True,
                         help="project from which analyses needs to be downloaded")
     parser.add_argument("--num-analyses", type=int, default=10000, required=False,
                         help="Number of analyses to download (max = 10000)")

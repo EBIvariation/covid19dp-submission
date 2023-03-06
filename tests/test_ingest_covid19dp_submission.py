@@ -19,6 +19,7 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.resources_folder = os.path.join(ROOT_DIR, 'tests', 'resources')
         self.project = 'PRJEB45554'
         self.accepted_taxonomies = [2697049]
+        self.assembly = 'GCA_009858895.3'
         self.snapshot_name = '2021_07_23_test_snapshot'
         self.num_of_analyses = 1
         self.assembly_report_url = os.path.join(self.resources_folder,
@@ -43,6 +44,7 @@ class TestIngestCovid19DPSubmission(TestCase):
         self.mongo_host = os.getenv('MONGO_HOST', 'localhost')
         self.postgres_host = os.getenv('POSTGRES_HOST', 'localhost')
         self.eva_stats_password = os.getenv('EVA_STATS_DEV_PASSWORD', 'password')
+        self.eva_maven_settings = os.path.join(self.resources_folder, 'properties', 'private_settings.xml')
         fill_properties_with_dict(
             os.path.join(self.resources_folder, 'properties', 'accessioning.properties'),
             self.accessioning_properties_file,
@@ -100,6 +102,7 @@ class TestIngestCovid19DPSubmission(TestCase):
                                     processed_analyses_file=self.processed_analyses_file,
                                     ignored_analyses_file=self.ignored_analyses_file,
                                     accepted_taxonomies=self.accepted_taxonomies,
+                                    assembly=self.assembly,
                                     app_config_file=self.app_config_file,
                                     nextflow_config_file=self.nextflow_config_file, resume=None)
         num_clustered_variants = self.mongo_db[self.accessioning_database_name]['clusteredVariantEntity'] \

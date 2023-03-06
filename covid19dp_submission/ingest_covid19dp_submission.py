@@ -22,6 +22,7 @@ import yaml
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.config_utils import get_args_from_private_config_file
 from ebi_eva_common_pyutils.logger import logging_config
+from ebi_eva_common_pyutils.spring_properties import SpringPropertiesGenerator
 
 from covid19dp_submission import NEXTFLOW_DIR
 from covid19dp_submission.download_analyses import download_analyses
@@ -51,17 +52,53 @@ def create_download_file_list(config: dict):
     return download_file_list
 
 
-def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str, app_config_file: str) -> dict:
+def _write_properties(output_file, properties_str):
+    with open(output_file, 'w') as open_file:
+        open_file.write(properties_str)
+
+
+def _get_config(project: str, taxonomy_id: int, target_assembly: str, snapshot_name: str, project_dir: str,
+                nextflow_config_file: str, app_config_file: str) -> dict:
     config = get_args_from_private_config_file(app_config_file)
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
+    # Make sure the directory exists
+    os.makedirs(download_target_dir, exist_ok=True)
+    release_dir = os.path.join(project_dir, 'release')
+    prop = SpringPropertiesGenerator(config['maven']['environment'], config['maven']['settings_file'])
+    accessioning_properties_file = os.path.join(download_target_dir, 'accessioning.properties')
+    clustering_properties_file = os.path.join(download_target_dir, 'clustering.properties')
+    release_properties_file = os.path.join(download_target_dir, 'release.properties')
+    _write_properties(accessioning_properties_file, prop.get_accessioning_properties(
+        target_assembly=target_assembly,
+        fasta=config['submission']['assembly_fasta'],
+        assembly_report=config['submission']['assembly_report'],
+        project_accession=project,
+        taxonomy_accession=taxonomy_id,
+        output_vcf=None,
+        vcf_file=None
+    ))
+    _write_properties(clustering_properties_file, prop.get_clustering_properties(
+        job_name='CLUSTERING_FROM_MONGO_JOB',
+        target_assembly=target_assembly,
+        rs_report_path=target_assembly + '_rs_report.txt'
+    ))
+    _write_properties(release_properties_file, prop.get_release_properties(
+        job_name='CREATE_INCREMENTAL_ACCESSION_RELEASE_JOB',
+        assembly_accession=target_assembly,
+        fasta=config['submission']['assembly_fasta'],
+        assembly_report=config['submission']['assembly_report'],
+        output_folder=release_dir,
+        contig_naming='INSDC'
+    ))
+
     download_file_list = os.path.join(download_target_dir, 'file_list.csv')
     submission_param_file = os.path.join(download_target_dir, 'nf_params.yml')
     concat_processing_dir = os.path.join(download_target_dir, 'processed')
     log_dir = os.path.join(project_dir, '00_logs', snapshot_name)
     validation_dir = os.path.join(log_dir, 'validation')
     accession_output_dir = os.path.join(project_dir, '60_eva_public', snapshot_name)
-
+    public_ftp_dir = os.path.join(config['submission']['public_ftp_dir'], project)
     config['submission'].update(
         {'snapshot_name': snapshot_name,
          'download_target_dir': download_target_dir, 'download_file_list': download_file_list,
@@ -69,6 +106,10 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
          'concat_processing_dir': concat_processing_dir,
          'accession_output_dir': accession_output_dir,
          'accession_output_file': os.path.join(accession_output_dir, f'{snapshot_name}.accessioned.vcf'),
+         'accessioning_properties_file': accessioning_properties_file,
+         'clustering_properties_file': clustering_properties_file,
+         'release_properties_file': release_properties_file,
+         'public_ftp_dir': public_ftp_dir,
          'log_dir': log_dir, 'validation_dir': validation_dir
          })
     config['executable']['python'] = {'interpreter': sys.executable,
@@ -79,8 +120,8 @@ def _get_config(snapshot_name: str, project_dir: str, nextflow_config_file: str,
 
 
 def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: int, processed_analyses_file: str,
-                                ignored_analyses_file: str, accepted_taxonomies: list, app_config_file: str,
-                                nextflow_config_file: str or None, resume: str or None):
+                                ignored_analyses_file: str, accepted_taxonomies: list, assembly: str,
+                                app_config_file: str, nextflow_config_file: str or None, resume: str or None):
     process_new_snapshot = False
     if resume is None:
         snapshot_name = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
@@ -88,7 +129,8 @@ def ingest_covid19dp_submission(project: str, project_dir: str, num_analyses: in
     else:
         snapshot_name = resume
 
-    config = _get_config(snapshot_name, project_dir, nextflow_config_file, app_config_file)
+    config = _get_config(project, accepted_taxonomies[0], assembly,  snapshot_name, project_dir,
+                         nextflow_config_file, app_config_file)
     # Add default processing batch size
     if 'batch_size' not in config['submission']:
         config['submission']['batch_size'] = 100
