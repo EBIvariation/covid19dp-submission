@@ -62,6 +62,8 @@ def _get_config(project: str, taxonomy_id: int, target_assembly: str, snapshot_n
     config = get_args_from_private_config_file(app_config_file)
 
     download_target_dir = os.path.join(project_dir, '30_eva_valid', snapshot_name)
+    # Make sure the directory exists
+    os.makedirs(download_target_dir, exist_ok=True)
     release_dir = os.path.join(project_dir, 'release')
     prop = SpringPropertiesGenerator(config['maven']['environment'], config['maven']['settings_file'])
     accessioning_properties_file = os.path.join(download_target_dir, 'accessioning.properties')
