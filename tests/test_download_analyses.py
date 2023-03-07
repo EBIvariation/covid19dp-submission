@@ -145,24 +145,27 @@ class TestDownloadAnalysisENA(TestCase):
             {'run_ref': f'rr{i}', 'analysis_accession': f'acc{i}', 'submitted_ftp': f'ftp.ebi.ac.uk/acc{i}/rr{i}.vcf.gz',
              'submitted_aspera': f'asperap.ebi.ac.uk/acc{i}/rr{i}.vcf.gz'} for i in range(1, 9)
         ]
+        downloaded_files = []
         with patch('covid19dp_submission.download_analyses.run_command_with_output') as mock_run:
             # create the expected output files so that the download do not crash
             for analysis in analyses_array:
                 expected_file = os.path.join(self.download_target_dir, os.path.basename(analysis['submitted_aspera']))
                 touch(expected_file)
             download_files_via_aspera(analyses_array, self.download_target_dir, self.processed_analyses_file,
-                                      'ascp', 'aspera_id_dsa', batch_size=5)
+                                      'ascp', 'aspera_id_dsa', downloaded_files, batch_size=5)
         # 2 batches of 5 to get 8 files
         assert mock_run.call_count == 2
         with open(self.processed_analyses_file) as open_file:
             lines = open_file.readlines()
             assert len(lines) == 8
+        assert len(downloaded_files) == 8
 
     def test_retry_download_files_via_aspera(self):
         analyses_array = [
             {'run_ref': f'rr{i}', 'analysis_accession': f'acc{i}', 'submitted_ftp': f'ftp.ebi.ac.uk/acc{i}/rr{i}.vcf.gz',
              'submitted_aspera': f'asperap.ebi.ac.uk/acc{i}/rr{i}.vcf.gz'} for i in range(1, 9)
         ]
+        downloaded_files = []
         with patch('covid19dp_submission.download_analyses.run_command_with_output') as mock_run:
             # create some of the expected output files so that the download retries
             for analysis in analyses_array[:-1]:
@@ -170,9 +173,10 @@ class TestDownloadAnalysisENA(TestCase):
                 touch(expected_file)
             with self.assertRaises(UnfinishedBatchError):
                 download_files_via_aspera(analyses_array, self.download_target_dir, self.processed_analyses_file,
-                                          'ascp', 'aspera_id_dsa', batch_size=5)
-        # 2 batches of 5 in first try then 3 more in subsequent tries = 5
+                                          'ascp', 'aspera_id_dsa', downloaded_files, batch_size=5)
+        # 2 batches of 5 in first try then 3 more in subsequent tries = 5 until it fails
         assert mock_run.call_count == 5
         with open(self.processed_analyses_file) as open_file:
             lines = open_file.readlines()
             assert len(lines) == 7
+        assert len(downloaded_files) == 7
