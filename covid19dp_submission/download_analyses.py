@@ -16,6 +16,7 @@ import argparse
 import copy
 import glob
 import os
+import subprocess
 import urllib
 
 import requests
@@ -182,8 +183,10 @@ def download_files_via_aspera(analyses_array, download_target_dir, processed_ana
                 else:
                     logger.error(f'No Aspera path available for analysis {analysis}')
             command = f'{ascp} -i {aspera_id_dsa} -QT -l 300m -P 33001 {" ".join(download_urls)} {download_target_dir}'
-            run_command_with_output(f"Download batch of covid19 data", command)
-
+            try:
+                run_command_with_output(f"Download batch of covid19 data", command)
+            except subprocess.CalledProcessError:
+                logger.error('Aspera download command failed.')
             for analysis in analysis_batch:
                 expected_output_file = os.path.join(download_target_dir, os.path.basename(analysis['submitted_aspera']))
                 if os.path.exists(expected_output_file):
