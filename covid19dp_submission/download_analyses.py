@@ -106,7 +106,7 @@ def get_analyses_from_ena(project, offset=0, limit=0):
     """
     analyses_url = (
         f"https://www.ebi.ac.uk/ena/portal/api/filereport?result=analysis&accession={project}"
-        f"&format=json&fields=run_ref,analysis_accession,submitted_ftp,submitted_aspera,tax_id"
+        f"&format=json&fields=run_accession,analysis_accession,submitted_ftp,submitted_aspera,tax_id"
     )
     if offset:
         analyses_url += f'&offset={offset}'
