@@ -3,11 +3,14 @@ nextflow.enable.dsl=2
 params.NORMALISED_VCF_DIR = "${params.submission.download_target_dir}/normalised_vcfs"
 params.REFSEQ_FASTA = "${params.submission.download_target_dir}/refseq_fasta.fa"
 
+// This is needed because "bcftools norm" step requires a FASTA
+// but the VCFs we get from Covid19 data team only have RefSeq contigs
 process create_refseq_fasta {
     output:
     val true, emit: create_refseq_fasta_success
 
     script:
+    // TODO: Doing this seems like a bad idea but this seems to work well for now
     """
     sed s/MN908947.3/NC_045512.2/g $params.submission.assembly_fasta > $params.REFSEQ_FASTA
     """
@@ -210,7 +213,7 @@ process incremental_release {
 
 workflow  {
     main:
-	create_refseq_fasta()
+	    create_refseq_fasta()
         Channel.fromPath("$params.submission.download_file_list")
                .splitCsv(header:false)
                .map(row -> row[0])
