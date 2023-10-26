@@ -1,13 +1,26 @@
 nextflow.enable.dsl=2
 
+params.NORMALISED_VCF_DIR = "${params.submission.download_target_dir}/normalised_vcfs"
+params.REFSEQ_FASTA = "${params.submission.download_target_dir}/refseq_fasta.fa"
+
+process create_refseq_fasta {
+    output:
+    val true, emit: create_refseq_fasta_success
+
+    script:
+    """
+    sed s/MN908947.3/NC_045512.2/g $params.submission.assembly_fasta > $params.REFSEQ_FASTA
+    """
+}
+
 process validate_vcfs {
 
     input:
     path vcf_files
-    
+
     output:
     val true, emit: validate_vcfs_success
-    
+
     script:
     """
     export PYTHONPATH="$params.executable.python.script_path"
@@ -48,10 +61,10 @@ process bgzip_and_index {
     val flag1
     val flag2
     path vcf_files
-    
+
     output:
     val true, emit: bgzip_and_index_success
-    
+
     script:
     """
     export PYTHONPATH="$params.executable.python.script_path"
@@ -64,19 +77,43 @@ process bgzip_and_index {
     """
 }
 
+process normalise_vcfs {
+
+    input:
+    val flag1
+    val flag2
+    path vcf_files
+
+    output:
+    val true, emit: normalise_vcfs_success
+
+    script:
+    """
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
+        -m steps.normalise_vcfs \
+        --vcf-file  $vcf_files \
+        --input-dir $params.submission.download_target_dir \
+        --output-dir $params.NORMALISED_VCF_DIR \
+        --bcftools-binary $params.executable.bcftools \
+        --refseq-fasta-file $params.REFSEQ_FASTA \
+    ) >> $params.submission.log_dir/normalise_vcfs.log 2>&1
+    """
+}
+
 process vertical_concat {
     input:
     val flag
-    
+
     output:
     val true, emit: vertical_concat_success
-    
+
     script:
     """
     export PYTHONPATH="$params.executable.python.script_path"
     ($params.executable.python.interpreter \
         -m steps.vcf_vertical_concat.run_vcf_vertical_concat_pipeline \
-        --toplevel-vcf-dir $params.submission.download_target_dir \
+        --toplevel-vcf-dir $params.NORMALISED_VCF_DIR \
         --concat-processing-dir $params.submission.concat_processing_dir \
         --concat-chunk-size $params.submission.concat_chunk_size \
         --bcftools-binary $params.executable.bcftools \
@@ -88,13 +125,13 @@ process vertical_concat {
 
 process accession_vcf {
     clusterOptions "-g /accession/$params.submission.accessioning_instance"
-    
+
     input:
     val flag
-    
+
     output:
     val true, emit: accession_vcf_success
-    
+
     script:
     //Accessioning properties file passed via command line should already be populated with project and assembly accessions
     """
@@ -116,10 +153,10 @@ process sync_accessions_to_public_ftp {
 
     input:
     val flag
-    
+
     output:
     val true, emit: sync_accessions_to_public_ftp_success
-    
+
     script:
     """
     mkdir -p $params.submission.public_ftp_dir
@@ -133,10 +170,10 @@ process cluster_assembly {
 
     input:
     val flag
-    
+
     output:
     val true, emit: cluster_assembly_success
-    
+
     script:
     //Clustering properties file passed via command line should already be populated with project and assembly accessions
     """
@@ -173,6 +210,7 @@ process incremental_release {
 
 workflow  {
     main:
+	create_refseq_fasta()
         Channel.fromPath("$params.submission.download_file_list")
                .splitCsv(header:false)
                .map(row -> row[0])
@@ -181,7 +219,8 @@ workflow  {
         validate_vcfs(vcf_files_list)
         asm_check_vcfs(vcf_files_list)
         bgzip_and_index(validate_vcfs.out.validate_vcfs_success, asm_check_vcfs.out.asm_check_vcfs_success, vcf_files_list)
+        normalise_vcfs(create_refseq_fasta.out.create_refseq_fasta_success, bgzip_and_index.out.bgzip_and_index_success, vcf_files_list)
 
-        vertical_concat(bgzip_and_index.out.bgzip_and_index_success.collect()) | \
+        vertical_concat(normalise_vcfs.out.normalise_vcfs_success.collect()) | \
         accession_vcf | sync_accessions_to_public_ftp | cluster_assembly | incremental_release
 }
