@@ -80,30 +80,6 @@ process bgzip_and_index {
     """
 }
 
-process normalise_vcfs {
-
-    input:
-    val flag1
-    val flag2
-    path vcf_files
-
-    output:
-    val true, emit: normalise_vcfs_success
-
-    script:
-    """
-    export PYTHONPATH="$params.executable.python.script_path"
-    ($params.executable.python.interpreter \
-        -m steps.normalise_vcfs \
-        --vcf-file  $vcf_files \
-        --input-dir $params.submission.download_target_dir \
-        --output-dir $params.NORMALISED_VCF_DIR \
-        --bcftools-binary $params.executable.bcftools \
-        --refseq-fasta-file $params.REFSEQ_FASTA \
-    ) >> $params.submission.log_dir/normalise_vcfs.log 2>&1
-    """
-}
-
 process vertical_concat {
     input:
     val flag
@@ -126,6 +102,28 @@ process vertical_concat {
     """
 }
 
+process normalise_concat_vcf {
+
+    input:
+    val flag1
+
+    output:
+    val true, emit: normalise_concat_vcf_success
+
+    script:
+    """
+    export PYTHONPATH="$params.executable.python.script_path"
+    ($params.executable.python.interpreter \
+        -m steps.normalise_vcfs \
+        --vcf-files  $params.submission.concat_result_file \
+        --input-dir `dirname ${params.submission.concat_result_file}` \
+        --output-dir $params.NORMALISED_VCF_DIR \
+        --bcftools-binary $params.executable.bcftools \
+        --refseq-fasta-file $params.REFSEQ_FASTA \
+    ) >> $params.submission.log_dir/normalise_concat_vcf.log 2>&1
+    """
+}
+
 process accession_vcf {
     clusterOptions "-g /accession/$params.submission.accessioning_instance"
 
@@ -139,9 +137,10 @@ process accession_vcf {
     //Accessioning properties file passed via command line should already be populated with project and assembly accessions
     """
     export PYTHONPATH="$params.executable.python.script_path"
+    export NORMALISED_CONCAT_VCF=("${params.NORMALISED_VCF_DIR}/"`basename ${params.submission.concat_result_file}`)
     ($params.executable.python.interpreter \
         -m steps.accession_vcf \
-        --vcf-file $params.submission.concat_result_file \
+        --vcf-file \$NORMALISED_CONCAT_VCF \
         --accessioning-jar-file $params.jar.accession_pipeline \
         --accessioning-properties-file $params.submission.accessioning_properties_file \
         --accessioning-instance $params.submission.accessioning_instance \
@@ -222,8 +221,6 @@ workflow  {
         validate_vcfs(vcf_files_list)
         asm_check_vcfs(vcf_files_list)
         bgzip_and_index(validate_vcfs.out.validate_vcfs_success, asm_check_vcfs.out.asm_check_vcfs_success, vcf_files_list)
-        normalise_vcfs(create_refseq_fasta.out.create_refseq_fasta_success, bgzip_and_index.out.bgzip_and_index_success, vcf_files_list)
-
-        vertical_concat(normalise_vcfs.out.normalise_vcfs_success.collect()) | \
-        accession_vcf | sync_accessions_to_public_ftp | cluster_assembly | incremental_release
+        vertical_concat(bgzip_and_index.out.bgzip_and_index_success.collect()) | \
+        normalise_concat_vcf | accession_vcf | sync_accessions_to_public_ftp | cluster_assembly | incremental_release
 }
