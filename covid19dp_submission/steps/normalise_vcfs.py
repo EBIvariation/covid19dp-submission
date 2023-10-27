@@ -17,12 +17,9 @@ import os
 
 from ebi_eva_common_pyutils.command_utils import run_command_with_output
 from ebi_eva_common_pyutils.logger import logging_config
+from covid19dp_submission.steps.bgzip_and_index_vcf import _get_vcf_filename_without_extension
 
 logger = logging_config.get_logger(__name__)
-
-
-def _get_vcf_filename_without_extension(vcf_file_name: str) -> str:
-    return vcf_file_name.replace(".vcf.gz", "").replace(".vcf", "")
 
 
 def normalise(input_dir: str, vcf_file: str, output_file: str, bcftools_binary: str, refseq_fasta_file: str) -> str:
